@@ -14,6 +14,7 @@
   python build.py reset    → reset build number
 """
 
+import platform
 import os
 import sys
 import json

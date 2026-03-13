@@ -403,14 +403,19 @@ public class SearchOverlay extends Screen {
         int fx  = bx + 10;
         int ffy = fy + (FOOTER_H - textRenderer.fontHeight) / 2;
 
+        String sel = Text.translatable("stashfinder.search.hint_select").getString();
+        String nav = Text.translatable("stashfinder.search.hint_navigate").getString();
+        String apl = Text.translatable("stashfinder.search.hint_apply").getString();
+        String cls = Text.translatable("stashfinder.search.hint_close").getString();
+
         if (showHistory && !history.isEmpty()) {
-            hint(ctx, fx,                            ffy, "↑↓", " Seç   ");
-            hint(ctx, fx + hintW("↑↓ Seç   "),      ffy, "Enter", " Uygula");
-            hint(ctx, fx + hintW("↑↓ Seç   Enter Uygula"), ffy, "Esc", " Kapat");
+            hint(ctx, fx,                              ffy, "↑↓",    " " + sel + "  ");
+            hint(ctx, fx + hintW("↑↓ " + sel + "  "), ffy, "Enter", " " + apl + "  ");
+            hint(ctx, fx + hintW("↑↓ " + sel + "  Enter " + apl + "  "), ffy, "Esc", " " + cls);
         } else {
-            hint(ctx, fx,                                  ffy, "↑↓",    " Seç   ");
-            hint(ctx, fx + hintW("↑↓ Seç   "),             ffy, "Enter", " Yön   ");
-            hint(ctx, fx + hintW("↑↓ Seç   Enter Yön   "), ffy, "Esc",   " Kapat");
+            hint(ctx, fx,                              ffy, "↑↓",    " " + sel + "  ");
+            hint(ctx, fx + hintW("↑↓ " + sel + "  "), ffy, "Enter", " " + nav + "  ");
+            hint(ctx, fx + hintW("↑↓ " + sel + "  Enter " + nav + "  "), ffy, "Esc", " " + cls);
         }
     }
 

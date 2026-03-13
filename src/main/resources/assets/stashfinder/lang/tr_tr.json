@@ -11,6 +11,10 @@
   "stashfinder.search.hint":          "Aramak istediğin itemi yaz...",
   "stashfinder.search.empty":         "Hiçbir sandıkta bulunamadı.",
   "stashfinder.search.history_label": "Son aramalar",
+  "stashfinder.search.hint_select":   "Seç",
+  "stashfinder.search.hint_navigate": "Yön",
+  "stashfinder.search.hint_apply":    "Uygula",
+  "stashfinder.search.hint_close":    "Kapat",
 
   "stashfinder.records.title":               "SANDIKLAR",
   "stashfinder.records.empty_list":          "Henüz sandık açılmadı.",

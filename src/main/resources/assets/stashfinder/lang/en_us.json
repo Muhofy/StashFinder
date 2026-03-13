@@ -11,6 +11,10 @@
   "stashfinder.search.hint":          "Type the item you are looking for...",
   "stashfinder.search.empty":         "Not found in any chest.",
   "stashfinder.search.history_label": "Recent searches",
+  "stashfinder.search.hint_select":   "Select",
+  "stashfinder.search.hint_navigate": "Navigate",
+  "stashfinder.search.hint_apply":    "Apply",
+  "stashfinder.search.hint_close":    "Close",
 
   "stashfinder.records.title":               "CHESTS",
   "stashfinder.records.empty_list":          "No chests indexed yet.",

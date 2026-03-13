@@ -1,5 +1,7 @@
 package com.muhofy.chestmemory.data;
 
+import net.minecraft.text.Text;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +14,7 @@ public class ChestRecord {
     private int             x, y, z;
     private String          dimension;
     private String          lastUpdated;
-    private boolean         isDouble;      // true → 54 slot (double chest)
+    private boolean         isDouble;
     private List<ChestItem> items;
 
     public ChestRecord() {
@@ -41,7 +43,7 @@ public class ChestRecord {
 
     public String getDisplayName(int autoIndex) {
         if (customName != null && !customName.isBlank()) return customName;
-        return "Sandık #" + autoIndex;
+        return Text.translatable("stashfinder.chest.default_name").getString() + autoIndex;
     }
 
     public boolean isInDimension(String dim) {
