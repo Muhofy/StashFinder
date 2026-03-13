@@ -1,0 +1,39 @@
+{
+  "category.stashfinder": "StashFinder",
+  "key.stashfinder.search":  "Open Search",
+  "key.stashfinder.records": "Open Chest Records",
+
+  "stashfinder.toast.indexed":   "Chest Indexed",
+  "stashfinder.toast.updated":   "Chest Updated",
+  "stashfinder.toast.arrived":   "Destination Reached!",
+
+  "stashfinder.search.placeholder":   "Search for an item...",
+  "stashfinder.search.hint":          "Type the item you are looking for...",
+  "stashfinder.search.empty":         "Not found in any chest.",
+  "stashfinder.search.history_label": "Recent searches",
+
+  "stashfinder.records.title":               "CHESTS",
+  "stashfinder.records.empty_list":          "No chests indexed yet.",
+  "stashfinder.records.select_hint":         "Select a chest",
+  "stashfinder.records.different_dimension": "Different dimension",
+  "stashfinder.records.last_updated":        "Last updated: ",
+  "stashfinder.records.slot_label_single":   "INVENTORY · 27 SLOTS",
+  "stashfinder.records.slot_label_double":   "DOUBLE CHEST · 54 SLOTS",
+  "stashfinder.records.btn.navigate":        "Navigate",
+  "stashfinder.records.btn.delete":          "Delete",
+  "stashfinder.records.btn.confirm_yes":     "Yes, Delete",
+  "stashfinder.records.btn.confirm_no":      "Cancel",
+  "stashfinder.records.confirm_delete":      "Are you sure you want to delete this chest record?",
+
+  "stashfinder.compass.title":    "Navigator",
+  "stashfinder.compass.arrived":  "Destination Reached!",
+  "stashfinder.compass.unit":     "m",
+
+  "stashfinder.item.unknown":     "Unknown",
+  "stashfinder.item.multi":       " different items",
+  "stashfinder.item.count_unit":  "x",
+  "stashfinder.item.dist_unit":   " blocks ",
+
+  "stashfinder.chest.default_name": "Chest #",
+  "stashfinder.chest.blk":          " blocks away"
+}

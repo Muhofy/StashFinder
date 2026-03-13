@@ -1,0 +1,150 @@
+plugins {
+    id 'fabric-loom' version '1.14-SNAPSHOT'
+    id 'maven-publish'
+}
+
+// ─────────────────────────────────────────────────────────────
+//  BUILD NUMBER
+// ─────────────────────────────────────────────────────────────
+def buildNumberFile = file("build-number.txt")
+def buildNumber = 1
+
+if (buildNumberFile.exists()) {
+    buildNumber = buildNumberFile.text.trim().toInteger()
+} else {
+    buildNumberFile.text = "1"
+}
+
+// ─────────────────────────────────────────────────────────────
+//  VERSION + OUTPUT DİZİNİ
+// ─────────────────────────────────────────────────────────────
+def suffix  = project.findProperty("version_suffix")?.trim() ?: ""
+def mcVer   = project.minecraft_version
+def modVer  = project.mod_version
+
+def computedVersion
+def jarSuffix
+def releaseDir
+
+switch (suffix.toLowerCase()) {
+    case "stable":
+        computedVersion = "${modVer}"
+        jarSuffix       = ""
+        releaseDir      = "release"
+        break
+    case "beta":
+    case "alpha":
+    case "rc":
+        computedVersion = "${modVer}-${suffix}${buildNumber}"
+        jarSuffix       = "-${suffix}${buildNumber}"
+        releaseDir      = suffix.toLowerCase()
+        break
+    default:
+        computedVersion = "${modVer}-dev+n${buildNumber}"
+        jarSuffix       = "-dev+n${buildNumber}"
+        releaseDir      = "dev"
+        break
+}
+
+version = computedVersion
+group   = project.maven_group
+
+def jarBaseName = "${project.archives_base_name}-${mcVer}-${modVer}${jarSuffix}"
+def outputDir   = file("${buildDir}/libs/${releaseDir}")
+
+base {
+    archivesName = jarBaseName
+}
+
+// ─────────────────────────────────────────────────────────────
+//  BUILD NUMARASINI ARTIR
+// ─────────────────────────────────────────────────────────────
+gradle.taskGraph.whenReady { graph ->
+    if (graph.hasTask(":build")) {
+        buildNumberFile.text = (buildNumber + 1).toString()
+        println "╔══════════════════════════════════════════╗"
+        println "║  StashFinder Build System                ║"
+        println "║  MC:      ${mcVer.padRight(30)}║"
+        println "║  Version: ${computedVersion.padRight(30)}║"
+        println "║  JAR:     ${jarBaseName.padRight(30)}║"
+        println "║  Output:  build/libs/${releaseDir.padRight(24)}║"
+        println "║  Build #: n${buildNumber.toString().padRight(29)}║"
+        println "╚══════════════════════════════════════════╝"
+    }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  DEPENDENCIES
+// ─────────────────────────────────────────────────────────────
+repositories {}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    filteringCharset "UTF-8"
+    filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+def targetJavaVersion = 21
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release = targetJavaVersion
+}
+
+java {
+    def jv = JavaVersion.toVersion(targetJavaVersion)
+    if (JavaVersion.current() < jv) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+    withSourcesJar()
+}
+
+// ─────────────────────────────────────────────────────────────
+//  JAR OUTPUT
+// ─────────────────────────────────────────────────────────────
+jar {
+    destinationDirectory = outputDir
+    from("LICENSE") {
+        rename { "${it}_${project.archives_base_name}" }
+    }
+}
+
+tasks.named("sourcesJar") {
+    destinationDirectory = outputDir
+}
+
+// ─────────────────────────────────────────────────────────────
+//  YARDIMCI TASKLAR
+// ─────────────────────────────────────────────────────────────
+tasks.register("buildInfo") {
+    group = "stashfinder"
+    description = "Shows current build info without incrementing build number"
+    doLast {
+        println ""
+        println "  Mod:     StashFinder"
+        println "  MC:      ${mcVer}"
+        println "  Version: ${computedVersion}"
+        println "  JAR:     ${jarBaseName}.jar"
+        println "  Output:  build/libs/${releaseDir}/"
+        println "  Build #: n${buildNumber}"
+        println "  Suffix:  ${suffix.isEmpty() ? '(none = dev)' : suffix}"
+        println ""
+    }
+}
+
+tasks.register("resetBuildNumber") {
+    group = "stashfinder"
+    description = "Resets build number back to 1"
+    doLast {
+        buildNumberFile.text = "1"
+        println "  Build number reset to 1."
+    }
+}

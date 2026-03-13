@@ -1,0 +1,14 @@
+// ChestMemoryConfig.java içinde getConfigPath() metodunu bul ve güncelle
+// Eski:
+private Path getConfigPath() {
+    return FabricLoader.getInstance().getConfigDir()
+                       .resolve("chestmemory")
+                       .resolve("config.json");
+}
+
+// Yeni:
+private Path getConfigPath() {
+    return FabricLoader.getInstance().getConfigDir()
+                       .resolve("stashfinder")
+                       .resolve("config.json");
+}

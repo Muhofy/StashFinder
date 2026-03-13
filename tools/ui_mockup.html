@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #3c3c3c;
+    font-family: 'Press Start 2P', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px 20px;
+    gap: 60px;
+  }
+
+  .section-label {
+    font-size: 9px;
+    color: #aaa;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    align-self: flex-start;
+    margin-left: 10px;
+    margin-bottom: -50px;
+  }
+
+  /* ── MC GAME BACKGROUND ── */
+  .mc-bg {
+    width: 100%;
+    max-width: 960px;
+    background: #5a7a5a;
+    border: 3px solid #111;
+    position: relative;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 8px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,0.04) 0px, rgba(0,0,0,0.04) 1px, transparent 1px, transparent 8px);
+  }
+
+  /* ═══════════════════════════════════════
+     VANILLA PANEL (shared base)
+  ═══════════════════════════════════════ */
+  .v-panel {
+    background: #c6c6c6;
+    border: 2px solid;
+    border-color: #fff #555 #555 #fff;
+    image-rendering: pixelated;
+  }
+
+  /* ── INNER BEVEL (sunken area) ── */
+  .v-inset {
+    background: #8b8b8b;
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    padding: 4px 6px;
+    font-size: 8px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* ── VANILLA BUTTON ── */
+  .v-btn {
+    background: #c6c6c6;
+    border: 2px solid;
+    border-color: #fff #555 #555 #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #3f3f3f;
+    padding: 4px 10px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .v-btn:hover {
+    background: #e0e0e0;
+    border-color: #fff #888 #888 #fff;
+    color: #ffffa0;
+    text-shadow: 1px 1px 0 #3f3f3f;
+  }
+  .v-btn.danger {
+    color: #ff8080;
+    text-shadow: 1px 1px 0 #3f3f3f;
+  }
+
+  /* ── SLOT ── */
+  .slot {
+    width: 32px; height: 32px;
+    background: #8b8b8b;
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    position: relative;
+    cursor: default;
+    flex-shrink: 0;
+  }
+  .slot:hover { background: #9a9a9a; }
+  .slot.empty { opacity: 0.5; }
+  .slot-count {
+    position: absolute;
+    bottom: 1px; right: 2px;
+    font-size: 7px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* ═══════════════════════════════════════
+     ① SEARCH OVERLAY
+  ═══════════════════════════════════════ */
+  .search-scene {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    background: rgba(0,0,0,0.5);
+    padding: 20px;
+  }
+
+  .search-box {
+    width: 380px;
+    background: #c6c6c6;
+    border: 3px solid;
+    border-color: #fff #555 #555 #fff;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .search-title {
+    font-size: 8px;
+    color: #3f3f3f;
+    text-shadow: 1px 1px 0 #fff;
+    margin-bottom: 2px;
+  }
+
+  .search-input-row {
+    display: flex;
+    gap: 0;
+  }
+
+  .search-input-wrap {
+    flex: 1;
+    background: #000;
+    border: 2px solid;
+    border-color: #373737 #c6c6c6 #c6c6c6 #373737;
+    padding: 5px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .search-input-wrap span { font-size: 11px; color: #555; }
+  .search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    width: 100%;
+    caret-color: #fff;
+  }
+  .search-input::placeholder { color: #555; }
+
+  .result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .result-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    background: #8b8b8b;
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    cursor: pointer;
+    position: relative;
+  }
+  .result-row.active {
+    background: #9e9e9e;
+    border-color: #fff #373737 #373737 #fff;
+  }
+  .result-row.active::before {
+    content: '▶';
+    position: absolute;
+    left: -14px;
+    font-size: 8px;
+    color: #ffff55;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .result-row.dim { opacity: 0.4; }
+
+  .r-icon {
+    width: 24px; height: 24px;
+    background: #6b6b6b;
+    border: 2px solid;
+    border-color: #373737 #c6c6c6 #c6c6c6 #373737;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+  .r-info { flex: 1; min-width: 0; }
+  .r-name { font-size: 7px; color: #fff; text-shadow: 1px 1px 0 #000; }
+  .r-sub  { font-size: 6px; color: #bbb; text-shadow: 1px 1px 0 #000; margin-top: 3px; }
+  .r-right { text-align: right; flex-shrink: 0; }
+  .r-count { font-size: 7px; color: #ffff55; text-shadow: 1px 1px 0 #000; }
+  .r-dist  { font-size: 6px; color: #55ffff; text-shadow: 1px 1px 0 #000; margin-top: 3px; }
+
+  .search-footer {
+    display: flex;
+    gap: 10px;
+    padding-top: 4px;
+  }
+  .sf-hint { font-size: 6px; color: #555; text-shadow: 1px 1px 0 #fff; }
+  .sf-hint b { color: #3f3f3f; }
+
+  /* ═══════════════════════════════════════
+     ② CHEST RECORDS (centered popup)
+  ═══════════════════════════════════════ */
+  .records-scene {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 520px;
+    background: rgba(0,0,0,0.5);
+    padding: 20px;
+    position: relative;
+  }
+
+  .rec-popup {
+    background: #c6c6c6;
+    border: 3px solid;
+    border-color: #fff #555 #555 #fff;
+    display: flex;
+    flex-direction: column;
+    width: 680px;
+    max-height: 480px;
+  }
+
+  .rec-titlebar {
+    background: #c6c6c6;
+    border-bottom: 2px solid #555;
+    padding: 7px 12px;
+    font-size: 8px;
+    color: #3f3f3f;
+    text-shadow: 1px 1px 0 #fff;
+  }
+
+  .rec-body-wrap {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* Left panel */
+  .rec-left {
+    width: 190px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid #555;
+  }
+
+  .rec-left-title {
+    padding: 6px 10px;
+    font-size: 6px;
+    color: #555;
+    text-shadow: 1px 1px 0 #fff;
+    border-bottom: 1px solid #aaa;
+  }
+
+  .chest-list { flex: 1; overflow: hidden; }
+
+  .chest-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-bottom: 1px solid #aaa;
+    cursor: pointer;
+    position: relative;
+  }
+  .chest-row:hover { background: #d4d4d4; }
+  .chest-row.sel {
+    background: #9e9e9e;
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+  }
+  .chest-row.sel::before {
+    content: '▶';
+    position: absolute;
+    left: 2px;
+    font-size: 7px;
+    color: #ffff55;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  .c-dot {
+    width: 7px; height: 7px;
+    background: #55aa00;
+    border: 1px solid #333;
+    flex-shrink: 0;
+    margin-left: 6px;
+  }
+  .c-dot.dim { background: #888; }
+
+  .c-info { flex: 1; min-width: 0; }
+  .c-name  { font-size: 7px; color: #3f3f3f; text-shadow: 1px 1px 0 #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-coord { font-size: 6px; color: #666; text-shadow: 1px 1px 0 #fff; margin-top: 2px; }
+  .c-dist  { font-size: 6px; color: #0055cc; text-shadow: 1px 1px 0 #fff; margin-top: 2px; }
+  .c-dist.dim { color: #888; }
+  .chest-row.sel .c-name { color: #fff; text-shadow: 1px 1px 0 #000; }
+
+  .c-edit { font-size: 9px; color: #888; cursor: pointer; flex-shrink: 0; }
+  .c-edit:hover { color: #3f3f3f; }
+
+  .rec-divider { width: 2px; background: #aaa; flex-shrink: 0; }
+
+  /* Right panel */
+  .rec-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .rec-right-header {
+    padding: 7px 10px;
+    border-bottom: 1px solid #aaa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+  .rec-right-title { font-size: 7px; color: #3f3f3f; text-shadow: 1px 1px 0 #fff; }
+  .rec-coord-badge {
+    font-size: 6px;
+    background: #8b8b8b;
+    border: 2px solid;
+    border-color: #373737 #fff #fff #373737;
+    padding: 2px 6px;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    white-space: nowrap;
+  }
+
+  .rec-detail-body { flex: 1; padding: 10px; }
+
+  .slot-section-label {
+    font-size: 6px;
+    color: #555;
+    text-shadow: 1px 1px 0 #fff;
+    margin-bottom: 5px;
+  }
+
+  .slot-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 28px);
+    gap: 2px;
+  }
+
+  .slot {
+    width: 28px; height: 28px;
+  }
+
+  .rec-meta {
+    margin-top: 7px;
+    font-size: 6px;
+    color: #777;
+    text-shadow: 1px 1px 0 #fff;
+  }
+
+  .rec-footer {
+    padding: 7px 10px;
+    border-top: 1px solid #aaa;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  /* ═══════════════════════════════════════
+     ③ TOAST
+  ═══════════════════════════════════════ */
+  .toast-scene {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    min-height: 140px;
+    padding: 12px;
+    background: rgba(0,0,0,0.4);
+  }
+
+  .toast-stack { display: flex; flex-direction: column-reverse; gap: 4px; }
+
+  .toast {
+    width: 200px;
+    background: #c6c6c6;
+    border: 2px solid;
+    border-color: #fff #555 #555 #fff;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+  }
+  .toast-accent {
+    width: 4px;
+    flex-shrink: 0;
+  }
+  .toast-accent.green { background: #55aa00; }
+  .toast-accent.blue  { background: #5555ff; }
+  .toast-body { flex: 1; padding: 5px 7px; }
+  .toast-title { font-size: 7px; color: #3f3f3f; text-shadow: 1px 1px 0 #fff; }
+  .toast-sub   { font-size: 6px; color: #666;   text-shadow: 1px 1px 0 #fff; margin-top: 3px; }
+  .toast-badge {
+    align-self: flex-start;
+    margin: 4px 5px 0 0;
+    font-size: 6px;
+    background: #8b8b8b;
+    border: 1px solid #555;
+    color: #fff;
+    text-shadow: 1px 1px 0 #000;
+    padding: 1px 4px;
+  }
+
+  /* ═══════════════════════════════════════
+     ④ COMPASS HUD
+  ═══════════════════════════════════════ */
+  .compass-scene {
+    display: flex;
+    align-items: flex-start;
+    min-height: 140px;
+    padding: 12px;
+    background: rgba(0,0,0,0.4);
+  }
+
+  .compass-widget {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .compass-circle {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: #c6c6c6;
+    border: 3px solid;
+    border-color: #fff #555 #555 #fff;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .compass-inner {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: #8b8b8b;
+    border: 2px solid;
+    border-color: #373737 #c6c6c6 #c6c6c6 #373737;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  .compass-n {
+    position: absolute;
+    top: 3px;
+    font-size: 6px;
+    color: #ff5555;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .compass-s {
+    position: absolute;
+    bottom: 3px;
+    font-size: 6px;
+    color: #aaa;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .compass-e {
+    position: absolute;
+    right: 3px;
+    font-size: 6px;
+    color: #aaa;
+    text-shadow: 1px 1px 0 #000;
+  }
+  .compass-w {
+    position: absolute;
+    left: 3px;
+    font-size: 6px;
+    color: #aaa;
+    text-shadow: 1px 1px 0 #000;
+  }
+
+  /* Arrow pointing NE */
+  .compass-arrow {
+    width: 0; height: 0;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform-origin: center;
+    transform: translate(-50%, -120%) rotate(45deg);
+  }
+  .compass-arrow::before {
+    content: '';
+    display: block;
+    width: 4px; height: 14px;
+    background: #55ffff;
+    border: 1px solid #000;
+    margin: auto;
+    box-shadow: 1px 1px 0 #000;
+  }
+  .compass-dot {
+    width: 5px; height: 5px;
+    background: #fff;
+    border: 1px solid #000;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+  }
+
+  .compass-label {
+    background: #c6c6c6;
+    border: 2px solid;
+    border-color: #fff #555 #555 #fff;
+    padding: 3px 7px;
+    text-align: center;
+  }
+  .compass-name { font-size: 6px; color: #3f3f3f; text-shadow: 1px 1px 0 #fff; }
+  .compass-dist { font-size: 6px; color: #ffff55; text-shadow: 1px 1px 0 #000; margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ① SEARCH OVERLAY -->
+<p class="section-label">① Search Overlay (F tuşu)</p>
+<div class="mc-bg">
+  <div class="search-scene">
+    <div class="search-box">
+      <div class="search-title">🔍 Item Ara</div>
+      <div class="search-input-row">
+        <div class="search-input-wrap">
+          <span>▍</span>
+          <input class="search-input" value="diamond" readonly>
+        </div>
+      </div>
+      <div class="result-list">
+        <div class="result-row active">
+          <div class="r-icon">💎</div>
+          <div class="r-info">
+            <div class="r-name">Diamond</div>
+            <div class="r-sub">Silah Sandigi · -204, 64, 337</div>
+          </div>
+          <div class="r-right">
+            <div class="r-count">32x</div>
+            <div class="r-dist">127 blok ↗</div>
+          </div>
+        </div>
+        <div class="result-row">
+          <div class="r-icon">💎</div>
+          <div class="r-info">
+            <div class="r-name">Diamond</div>
+            <div class="r-sub">Sandik #2 · 100, 64, 200</div>
+          </div>
+          <div class="r-right">
+            <div class="r-count">8x</div>
+            <div class="r-dist">89 blok ↙</div>
+          </div>
+        </div>
+        <div class="result-row dim">
+          <div class="r-icon">💎</div>
+          <div class="r-info">
+            <div class="r-name">Diamond</div>
+            <div class="r-sub">Sandik #3 · -10, 32, 50</div>
+          </div>
+          <div class="r-right">
+            <div class="r-count">4x</div>
+            <div class="r-dist">Farkli boyut</div>
+          </div>
+        </div>
+      </div>
+      <div class="search-footer">
+        <span class="sf-hint"><b>↑↓</b> Sec</span>
+        <span class="sf-hint"><b>Enter</b> Yon goster</span>
+        <span class="sf-hint"><b>Esc</b> Kapat</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ② CHEST RECORDS -->
+<p class="section-label">② Sandik Kayitlari (G tusu) — Popup</p>
+<div class="mc-bg">
+  <div class="records-scene">
+    <!-- dim overlay -->
+    <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>
+
+    <!-- popup window -->
+    <div class="rec-popup">
+      <!-- title bar -->
+      <div class="rec-titlebar">
+        <span>📦 Sandik Kayitlari</span>
+      </div>
+
+      <div class="rec-body-wrap">
+        <!-- Left: list -->
+        <div class="rec-left">
+          <div class="rec-left-title">SANDIKLAR (4)</div>
+          <div class="chest-list">
+            <div class="chest-row sel">
+              <div class="c-dot"></div>
+              <div class="c-info">
+                <div class="c-name">Silah Sandigi</div>
+                <div class="c-coord">-204, 64, 337</div>
+                <div class="c-dist">127 blok</div>
+              </div>
+              <span class="c-edit">✏</span>
+            </div>
+            <div class="chest-row">
+              <div class="c-dot"></div>
+              <div class="c-info">
+                <div class="c-name">Sandik #2</div>
+                <div class="c-coord">100, 64, 200</div>
+                <div class="c-dist">89 blok</div>
+              </div>
+              <span class="c-edit">✏</span>
+            </div>
+            <div class="chest-row">
+              <div class="c-dot dim"></div>
+              <div class="c-info">
+                <div class="c-name">Sandik #3</div>
+                <div class="c-coord">-10, 32, 50</div>
+                <div class="c-dist dim">Farkli boyut</div>
+              </div>
+              <span class="c-edit">✏</span>
+            </div>
+            <div class="chest-row">
+              <div class="c-dot"></div>
+              <div class="c-info">
+                <div class="c-name">Sandik #4 ⊞</div>
+                <div class="c-coord">50, 64, 10</div>
+                <div class="c-dist">203 blok</div>
+              </div>
+              <span class="c-edit">✏</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="rec-divider"></div>
+
+        <!-- Right: detail -->
+        <div class="rec-right">
+          <div class="rec-right-header">
+            <span class="rec-right-title">Silah Sandigi</span>
+            <span class="rec-coord-badge">-204, 64, 337 · Overworld</span>
+          </div>
+          <div class="rec-detail-body">
+            <div class="slot-section-label">ENVANTER · 27 SLOT</div>
+            <div class="slot-grid">
+              <div class="slot">💎<span class="slot-count">32</span></div>
+              <div class="slot">🪨<span class="slot-count">64</span></div>
+              <div class="slot">🍎<span class="slot-count">12</span></div>
+              <div class="slot">⚔️</div>
+              <div class="slot">🏹</div>
+              <div class="slot">🪵<span class="slot-count">64</span></div>
+              <div class="slot">🔦<span class="slot-count">20</span></div>
+              <div class="slot">💣<span class="slot-count">3</span></div>
+              <div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+              <div class="slot empty"></div><div class="slot empty"></div>
+            </div>
+            <div class="rec-meta">Son guncelleme: 2025-03-07T12:00</div>
+          </div>
+          <div class="rec-footer">
+            <button class="v-btn">📍  Yon Goster</button>
+            <button class="v-btn danger">🗑  Kaydi Sil</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ③ TOAST + ④ COMPASS yan yana -->
+<p class="section-label">③ Toast  +  ④ Pusula HUD</p>
+<div class="mc-bg" style="display:flex; gap:0;">
+
+  <!-- Toast (sağ alt köşe) -->
+  <div class="toast-scene" style="flex:1; justify-content:flex-end;">
+    <div class="toast-stack">
+      <div class="toast">
+        <div class="toast-accent green"></div>
+        <div class="toast-body">
+          <div class="toast-title">Sandik Indekslendi</div>
+          <div class="toast-sub">Silah Sandigi • 8 item</div>
+        </div>
+      </div>
+      <div class="toast">
+        <div class="toast-accent blue"></div>
+        <div class="toast-body">
+          <div class="toast-title">Sandik Guncellendi</div>
+          <div class="toast-sub">Sandik #2 • 12 item</div>
+        </div>
+        <div class="toast-badge">x3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compass (sol üst köşe) -->
+  <div class="compass-scene" style="flex:1;">
+    <div class="compass-widget">
+      <div class="compass-circle">
+        <div class="compass-inner">
+          <span class="compass-n">N</span>
+          <span class="compass-s">S</span>
+          <span class="compass-e">E</span>
+          <span class="compass-w">W</span>
+          <div class="compass-arrow"></div>
+          <div class="compass-dot"></div>
+        </div>
+      </div>
+      <div class="compass-label">
+        <div class="compass-name">Silah Sandigi</div>
+        <div class="compass-dist">127m</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,71 @@
+[
+  {
+    "version": "1.0.0-dev+n5",
+    "suffix": "dev",
+    "build_num": 5,
+    "jar": "stashfinder-1.21.11-1.0.0-dev+n5.jar",
+    "size_kb": 0,
+    "elapsed": 14.394576,
+    "timestamp": "2026-03-13T22:29:54.810030",
+    "success": true
+  },
+  {
+    "version": "1.0.0-dev+n4",
+    "suffix": "dev",
+    "build_num": 4,
+    "jar": "stashfinder-1.21.11-1.0.0-dev+n4.jar",
+    "size_kb": 0,
+    "elapsed": 13.336466,
+    "timestamp": "2026-03-13T22:29:40.288751",
+    "success": true
+  },
+  {
+    "version": "1.0.0-dev+n2",
+    "suffix": "dev",
+    "build_num": 2,
+    "jar": "stashfinder-1.21.11-1.0.0-dev+n2.jar",
+    "size_kb": 0,
+    "elapsed": 22.346142,
+    "timestamp": "2026-03-13T22:26:19.986995",
+    "success": true
+  },
+  {
+    "version": "1.0.0-dev+n1",
+    "suffix": "dev",
+    "build_num": 1,
+    "jar": "stashfinder-1.21.11-1.0.0-dev+n1.jar",
+    "size_kb": 0,
+    "elapsed": 259.267223,
+    "timestamp": "2026-03-13T22:03:05.676086",
+    "success": true
+  },
+  {
+    "version": "1.0.0-dev+n7",
+    "suffix": "dev",
+    "build_num": 7,
+    "jar": "stashfinder-1.21.11-1.0.0-dev+n7.jar",
+    "size_kb": 0,
+    "elapsed": 17.301397,
+    "timestamp": "2026-03-13T21:29:29.531744",
+    "success": true
+  },
+  {
+    "version": "1.0.0-dev+n6",
+    "suffix": "dev",
+    "build_num": 6,
+    "jar": "stashfinder-1.21.11-1.0.0-dev+n6.jar",
+    "elapsed": 15.160435,
+    "timestamp": "2026-03-13T21:22:14.615110",
+    "success": false
+  },
+  {
+    "version": "1.0.0-dev+n5",
+    "suffix": "dev",
+    "build_num": 5,
+    "jar": "stashfinder-1.21.11-1.0.0-dev+n5.jar",
+    "size_kb": 0,
+    "elapsed": 15.199913,
+    "timestamp": "2026-03-13T21:11:52.142257",
+    "success": true
+  }
+]

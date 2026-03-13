@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "stashfinder",
+  "version": "${version}",
+  "name": "StashFinder",
+  "description": "StashFinder automatically indexes every chest you open, so you can instantly search for any item and navigate directly to it — no more opening every chest to find what you need.",
+  "authors": [
+    "Muhofy"
+  ],
+  "contact": {
+    "sources": "https://github.com/muhofy/stashfinder"
+  },
+  "license": "MIT",
+  "icon": "assets/stashfinder/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.muhofy.chestmemory.ChestMemoryMod"
+    ]
+  },
+  "mixins": [
+    "stashfinder.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.1",
+    "fabric-api": "*",
+    "minecraft": "~1.21.11",
+    "java": ">=21"
+  }
+}

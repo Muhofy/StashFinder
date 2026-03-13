@@ -1,0 +1,39 @@
+{
+  "category.stashfinder": "StashFinder",
+  "key.stashfinder.search":  "Aramayı Aç",
+  "key.stashfinder.records": "Sandık Kayıtlarını Aç",
+
+  "stashfinder.toast.indexed":   "Sandık İndekslendi",
+  "stashfinder.toast.updated":   "Sandık Güncellendi",
+  "stashfinder.toast.arrived":   "Hedefe Ulaştın!",
+
+  "stashfinder.search.placeholder":   "Item ara...",
+  "stashfinder.search.hint":          "Aramak istediğin itemi yaz...",
+  "stashfinder.search.empty":         "Hiçbir sandıkta bulunamadı.",
+  "stashfinder.search.history_label": "Son aramalar",
+
+  "stashfinder.records.title":               "SANDIKLAR",
+  "stashfinder.records.empty_list":          "Henüz sandık açılmadı.",
+  "stashfinder.records.select_hint":         "Sandık seçin",
+  "stashfinder.records.different_dimension": "Farklı boyut",
+  "stashfinder.records.last_updated":        "Son güncelleme: ",
+  "stashfinder.records.slot_label_single":   "ENVANTER · 27 SLOT",
+  "stashfinder.records.slot_label_double":   "ÇİFT SANDIK · 54 SLOT",
+  "stashfinder.records.btn.navigate":        "Yön Göster",
+  "stashfinder.records.btn.delete":          "Kaydı Sil",
+  "stashfinder.records.btn.confirm_yes":     "Evet, Sil",
+  "stashfinder.records.btn.confirm_no":      "Hayır",
+  "stashfinder.records.confirm_delete":      "Bu sandık kaydını silmek istiyor musun?",
+
+  "stashfinder.compass.title":   "Yön Göstergesi",
+  "stashfinder.compass.arrived": "Hedefe Ulaştın!",
+  "stashfinder.compass.unit":    "m",
+
+  "stashfinder.item.unknown":    "Bilinmiyor",
+  "stashfinder.item.multi":      " farklı item",
+  "stashfinder.item.count_unit": "x",
+  "stashfinder.item.dist_unit":  " blok ",
+
+  "stashfinder.chest.default_name": "Sandık #",
+  "stashfinder.chest.blk":          " blok uzakta"
+}
