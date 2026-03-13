@@ -3,15 +3,17 @@
 ╔══════════════════════════════════════════════════════════════╗
 ║           StashFinder Build CLI  —  by Muhofy               ║
 ╚══════════════════════════════════════════════════════════════╝
-  python build.py          → interactive menu
-  python build.py dev      → quick dev build
-  python build.py beta     → beta build
-  python build.py rc       → release candidate
-  python build.py stable   → stable release
-  python build.py info     → show build info
-  python build.py history  → show build history
-  python build.py clean    → clean build artifacts
-  python build.py reset    → reset build number
+  ./build.py          → interactive menu
+  ./build.py dev      → quick dev build
+  ./build.py beta     → beta build
+  ./build.py rc       → release candidate
+  ./build.py stable   → stable release
+  ./build.py info     → show build info
+  ./build.py history  → show build history
+  ./build.py clean    → clean build/ and .gradle/
+  ./build.py libs     → clean build/libs/
+  ./build.py mods     → clean stashfinder jars from mods/
+  ./build.py reset    → reset build number
 """
 
 import platform
@@ -26,16 +28,16 @@ from pathlib import Path
 # ─────────────────────────────────────────────────────────────
 #  ANSI COLORS
 # ─────────────────────────────────────────────────────────────
-R  = "\033[38;5;203m"
-G  = "\033[38;5;83m"
-Y  = "\033[38;5;227m"
-C  = "\033[38;5;87m"
-B  = "\033[38;5;69m"
-M  = "\033[38;5;177m"
-W  = "\033[38;5;255m"
-DM = "\033[38;5;242m"
-BLD= "\033[1m"
-RST= "\033[0m"
+R   = "\033[38;5;203m"
+G   = "\033[38;5;83m"
+Y   = "\033[38;5;227m"
+C   = "\033[38;5;87m"
+B   = "\033[38;5;69m"
+M   = "\033[38;5;177m"
+W   = "\033[38;5;255m"
+DM  = "\033[38;5;242m"
+BLD = "\033[1m"
+RST = "\033[0m"
 
 # ─────────────────────────────────────────────────────────────
 #  PATHS
@@ -54,6 +56,24 @@ MINECRAFT_DIR = Path("/storage/emulated/0/Minecraft/Zalith Launcher/versions/vul
 def clear():
     os.system("clear")
 
+def die(msg: str):
+    print(f"\n{R}✖ {msg}{RST}\n")
+    sys.exit(1)
+
+def strip_ansi(s: str) -> str:
+    import re
+    return re.sub(r'\033\[[0-9;]*m', '', s)
+
+def separator(char="─", width=58, color=DM):
+    print(f"{color}{char * width}{RST}")
+
+def box(lines: list, color: str = C, width: int = 56):
+    print(f"{color}╔{'═' * width}╗{RST}")
+    for line in lines:
+        pad = width - len(strip_ansi(line))
+        print(f"{color}║{RST} {line}{' ' * (pad - 1)}{color}║{RST}")
+    print(f"{color}╚{'═' * width}╝{RST}")
+
 def read_props() -> dict:
     props = {}
     if not GRADLE_PROPS.exists():
@@ -66,7 +86,7 @@ def read_props() -> dict:
     return props
 
 def write_suffix(suffix: str):
-    text = GRADLE_PROPS.read_text(encoding="utf-8")
+    text  = GRADLE_PROPS.read_text(encoding="utf-8")
     lines = []
     for line in text.splitlines():
         if line.strip().startswith("version_suffix"):
@@ -80,7 +100,7 @@ def get_build_number() -> int:
         return int(BUILD_NUM.read_text().strip())
     return 1
 
-def compute_version(mod_ver: str, suffix: str, build_num: int) -> tuple[str, str]:
+def compute_version(mod_ver: str, suffix: str, build_num: int):
     s = suffix.lower()
     if s == "stable":
         return mod_ver, ""
@@ -90,28 +110,9 @@ def compute_version(mod_ver: str, suffix: str, build_num: int) -> tuple[str, str
         return f"{mod_ver}-dev+n{build_num}", f"-dev+n{build_num}"
 
 def get_release_dir(suffix: str) -> str:
-    mapping = {"stable": "release", "beta": "beta", "alpha": "alpha", "rc": "rc"}
-    return mapping.get(suffix.lower(), "dev")
+    return {"stable": "release", "beta": "beta", "alpha": "alpha", "rc": "rc"}.get(suffix.lower(), "dev")
 
-def die(msg: str):
-    print(f"\n{R}✖ {msg}{RST}\n")
-    sys.exit(1)
-
-def box(lines: list[str], color: str = C, width: int = 56):
-    print(f"{color}╔{'═' * width}╗{RST}")
-    for line in lines:
-        pad = width - len(strip_ansi(line))
-        print(f"{color}║{RST} {line}{' ' * (pad - 1)}{color}║{RST}")
-    print(f"{color}╚{'═' * width}╝{RST}")
-
-def strip_ansi(s: str) -> str:
-    import re
-    return re.sub(r'\033\[[0-9;]*m', '', s)
-
-def separator(char="─", width=58, color=DM):
-    print(f"{color}{char * width}{RST}")
-
-def find_mods_dir() -> Path | None:
+def find_mods_dir():
     candidates = [
         MINECRAFT_DIR / "mods",
         Path.home() / ".var" / "app" / "com.mojang.Minecraft" / "data" / "minecraft" / "mods",
@@ -120,7 +121,7 @@ def find_mods_dir() -> Path | None:
     for p in candidates:
         if p.exists():
             return p
-    props = read_props()
+    props  = read_props()
     custom = props.get("minecraft_mods_dir", "").strip()
     if custom:
         p = Path(custom).expanduser()
@@ -142,20 +143,20 @@ def load_history() -> list:
 def save_history(entry: dict):
     history = load_history()
     history.insert(0, entry)
-    history = history[:50]
-    BUILD_HISTORY.write_text(json.dumps(history, indent=2, ensure_ascii=False), encoding="utf-8")
+    BUILD_HISTORY.write_text(
+        json.dumps(history[:50], indent=2, ensure_ascii=False), encoding="utf-8")
 
 # ─────────────────────────────────────────────────────────────
 #  HEADER
 # ─────────────────────────────────────────────────────────────
 def print_header():
-    props      = read_props()
-    build_num  = get_build_number()
-    mod_ver    = props.get("mod_version", "?")
-    mc_ver     = props.get("minecraft_version", "?")
-    suffix     = props.get("version_suffix", "")
-    full_ver, _= compute_version(mod_ver, suffix, build_num)
-    rel_dir    = get_release_dir(suffix)
+    props     = read_props()
+    build_num = get_build_number()
+    mod_ver   = props.get("mod_version", "?")
+    mc_ver    = props.get("minecraft_version", "?")
+    suffix    = props.get("version_suffix", "")
+    full_ver, _ = compute_version(mod_ver, suffix, build_num)
+    rel_dir   = get_release_dir(suffix)
 
     suffix_display = {
         "stable": f"{G}● STABLE{RST}",
@@ -178,90 +179,21 @@ def print_header():
     print()
 
 # ─────────────────────────────────────────────────────────────
-#  RUN GRADLE
-# ─────────────────────────────────────────────────────────────
-def run_gradle(suffix: str) -> bool:
-    write_suffix(suffix)
-
-    props      = read_props()
-    build_num  = get_build_number()
-    mod_ver    = props.get("mod_version", "?")
-    mc_ver     = props.get("minecraft_version", "?")
-    full_ver, jar_sfx = compute_version(mod_ver, suffix, build_num)
-    rel_dir    = get_release_dir(suffix)
-    jar_name   = f"stashfinder-{mc_ver}-{mod_ver}{jar_sfx}.jar"
-
-    print(f"\n{C}▶ Running gradle build...{RST}\n")
-    separator()
-
-    cmd = [str(GRADLEW), "build", "--stacktrace"] if "--debug" in sys.argv \
-          else [str(GRADLEW), "build"]
-
-    start   = datetime.now()
-    result  = subprocess.run(cmd, cwd=ROOT)
-    elapsed = (datetime.now() - start).total_seconds()
-
-    separator()
-
-    success = result.returncode == 0
-
-    if success:
-        jar_path = BUILD_DIR / rel_dir / jar_name
-        size_kb  = round(jar_path.stat().st_size / 1024, 1) if jar_path.exists() else 0
-
-        print(f"\n{G}✔ Build successful!{RST}  {DM}({elapsed:.1f}s){RST}\n")
-        box([
-            f"  {DM}JAR      {RST}{W}{jar_name}{RST}",
-            f"  {DM}Size     {RST}{W}{size_kb} KB{RST}",
-            f"  {DM}Output   {RST}{G}build/libs/{rel_dir}/{RST}",
-            f"  {DM}Version  {RST}{C}{full_ver}{RST}",
-            f"  {DM}Built at {RST}{DM}{datetime.now().strftime('%H:%M:%S')}{RST}",
-        ], color=G)
-
-        prompt_git_tag(full_ver)
-        prompt_install_mod(jar_path)
-
-        save_history({
-            "version":   full_ver,
-            "suffix":    suffix or "dev",
-            "build_num": build_num,
-            "jar":       jar_name,
-            "size_kb":   size_kb,
-            "elapsed":   elapsed,
-            "timestamp": datetime.now().isoformat(),
-            "success":   True,
-        })
-    else:
-        print(f"\n{R}✖ Build failed!{RST}  {DM}({elapsed:.1f}s){RST}")
-        print(f"{DM}  Check output above for errors.{RST}\n")
-
-        save_history({
-            "version":   full_ver,
-            "suffix":    suffix or "dev",
-            "build_num": build_num,
-            "jar":       jar_name,
-            "elapsed":   elapsed,
-            "timestamp": datetime.now().isoformat(),
-            "success":   False,
-        })
-
-    return success
-
-# ─────────────────────────────────────────────────────────────
 #  GIT TAG
 # ─────────────────────────────────────────────────────────────
 def prompt_git_tag(version: str):
     tag_name = f"v{version}"
-    is_git   = subprocess.run(["git", "rev-parse", "--git-dir"],
-                               cwd=ROOT, capture_output=True).returncode == 0
+    is_git   = subprocess.run(
+        ["git", "rev-parse", "--git-dir"],
+        cwd=ROOT, capture_output=True).returncode == 0
     if is_git:
         _tag_git(tag_name)
     else:
-        _tag_changelog(tag_name, version)
+        _tag_changelog(tag_name)
 
 def _tag_git(tag_name: str):
-    existing = subprocess.run(["git", "tag", "-l", tag_name],
-                               cwd=ROOT, capture_output=True, text=True)
+    existing = subprocess.run(
+        ["git", "tag", "-l", tag_name], cwd=ROOT, capture_output=True, text=True)
     if existing.stdout.strip() == tag_name:
         print(f"\n  {DM}Tag {tag_name} already exists, skipping.{RST}")
         return
@@ -271,21 +203,21 @@ def _tag_git(tag_name: str):
         return
     print(f"  {DM}Tag mesajı (boş = 'Release {tag_name}'):{RST}")
     msg = input(f"  {W}>{RST} ").strip() or f"Release {tag_name}"
-    r = subprocess.run(["git", "tag", "-a", tag_name, "-m", msg], cwd=ROOT)
+    r   = subprocess.run(["git", "tag", "-a", tag_name, "-m", msg], cwd=ROOT)
     if r.returncode == 0:
         print(f"  {G}✔ Tag oluşturuldu:{RST} {W}{tag_name}{RST}  {DM}\"{msg}\"{RST}")
         print(f"  {DM}Push için: git push origin {tag_name}{RST}")
     else:
         print(f"  {R}✖ Tag oluşturulamadı.{RST}")
 
-def _tag_changelog(tag_name: str, version: str):
+def _tag_changelog(tag_name: str):
     changelog = ROOT / "CHANGELOG.md"
     print(f"\n  {Y}CHANGELOG.md'ye tag eklemek ister misin?{RST}  {DM}({tag_name}){RST}")
     if input(f"  {W}[y/N]:{RST} ").strip().lower() != "y":
         print(f"  {DM}Tag eklenmedi.{RST}")
         return
     print(f"  {DM}Açıklama (boş bırakabilirsin):{RST}")
-    msg = input(f"  {W}>{RST} ").strip() or "No description."
+    msg      = input(f"  {W}>{RST} ").strip() or "No description."
     date_str = datetime.now().strftime("%Y-%m-%d %H:%M")
     entry    = f"\n## {tag_name}  —  {date_str}\n{msg}\n"
     if not changelog.exists():
@@ -303,19 +235,19 @@ def _tag_changelog(tag_name: str, version: str):
 #  MOD INSTALL
 # ─────────────────────────────────────────────────────────────
 def prompt_install_mod(jar_path: Path):
-    # jar_path bulunamıyorsa dizinde stashfinder-*.jar ara
     if not jar_path.exists():
-        candidates = list(jar_path.parent.glob("stashfinder-*.jar"))
-        # sources jar'ı hariç tut
-        candidates = [p for p in candidates if "sources" not in p.name]
+        candidates = [p for p in jar_path.parent.iterdir()
+                      if p.name.startswith("stashfinder-")
+                      and p.suffix == ".jar"
+                      and "sources" not in p.name]
         if not candidates:
-            print(f"\n  {R}JAR bulunamadı: {jar_path.name}{RST}")
+            print(f"\n  {R}JAR bulunamadı.{RST}")
             return
         jar_path = max(candidates, key=lambda p: p.stat().st_mtime)
 
     mods_dir = find_mods_dir()
     if not mods_dir:
-        print(f"\n  {DM}Minecraft mods dizini bulunamadı, kurulum atlandı.{RST}")
+        print(f"\n  {DM}Minecraft mods dizini bulunamadı.{RST}")
         return
 
     print(f"\n  {Y}Minecraft'a yüklemek ister misin?{RST}  {DM}({mods_dir}){RST}")
@@ -324,7 +256,6 @@ def prompt_install_mod(jar_path: Path):
         print(f"  {DM}Kurulum atlandı.{RST}")
         return
 
-    # Mevcut stashfinder jar'larını sil
     for old in mods_dir.iterdir():
         if old.name.startswith("stashfinder-") and old.suffix == ".jar":
             old.unlink()
@@ -333,6 +264,102 @@ def prompt_install_mod(jar_path: Path):
     dest = mods_dir / jar_path.name
     shutil.copy2(jar_path, dest)
     print(f"  {G}✔ Kuruldu:{RST} {W}{dest}{RST}")
+
+# ─────────────────────────────────────────────────────────────
+#  RENAME PROMPT
+# ─────────────────────────────────────────────────────────────
+def prompt_rename_jar(jar_path: Path):
+    if not jar_path.exists():
+        return
+    print(f"\n  {Y}JAR'ı yeniden adlandırmak ister misin?{RST}  {DM}({jar_path.name}){RST}")
+    if input(f"  {W}[y/N]:{RST} ").strip().lower() != "y":
+        return
+    print(f"  {DM}Yeni isim (.jar otomatik eklenir):{RST}")
+    new_name = input(f"  {W}>{RST} ").strip()
+    if not new_name:
+        print(f"  {DM}İptal edildi.{RST}")
+        return
+    if not new_name.endswith(".jar"):
+        new_name += ".jar"
+    new_path = jar_path.parent / new_name
+    jar_path.rename(new_path)
+    print(f"  {G}✔ Yeniden adlandırıldı:{RST} {W}{new_name}{RST}")
+
+# ─────────────────────────────────────────────────────────────
+#  RUN GRADLE
+# ─────────────────────────────────────────────────────────────
+def run_gradle(suffix: str) -> bool:
+    write_suffix(suffix)
+
+    props     = read_props()
+    build_num = get_build_number()
+    mod_ver   = props.get("mod_version", "?")
+    mc_ver    = props.get("minecraft_version", "?")
+    full_ver, jar_sfx = compute_version(mod_ver, suffix, build_num)
+    rel_dir   = get_release_dir(suffix)
+    jar_name  = f"stashfinder-{mc_ver}-{mod_ver}{jar_sfx}.jar"
+
+    print(f"\n{C}▶ Running gradle build...{RST}\n")
+    separator()
+
+    cmd     = [str(GRADLEW), "build", "--stacktrace"] if "--debug" in sys.argv \
+              else [str(GRADLEW), "build"]
+    start   = datetime.now()
+    result  = subprocess.run(cmd, cwd=ROOT)
+    elapsed = (datetime.now() - start).total_seconds()
+
+    separator()
+    success = result.returncode == 0
+
+    if success:
+        jar_path = BUILD_DIR / rel_dir / jar_name
+        # Bulunamazsa dizinde ara
+        if not jar_path.exists():
+            candidates = [p for p in (BUILD_DIR / rel_dir).iterdir()
+                          if p.name.startswith("stashfinder-")
+                          and p.suffix == ".jar"
+                          and "sources" not in p.name] if (BUILD_DIR / rel_dir).exists() else []
+            if candidates:
+                jar_path = max(candidates, key=lambda p: p.stat().st_mtime)
+
+        size_kb = round(jar_path.stat().st_size / 1024, 1) if jar_path.exists() else 0
+
+        print(f"\n{G}✔ Build successful!{RST}  {DM}({elapsed:.1f}s){RST}\n")
+        box([
+            f"  {DM}JAR      {RST}{W}{jar_path.name if jar_path.exists() else jar_name}{RST}",
+            f"  {DM}Size     {RST}{W}{size_kb} KB{RST}",
+            f"  {DM}Output   {RST}{G}build/libs/{rel_dir}/{RST}",
+            f"  {DM}Version  {RST}{C}{full_ver}{RST}",
+            f"  {DM}Built at {RST}{DM}{datetime.now().strftime('%H:%M:%S')}{RST}",
+        ], color=G)
+
+        prompt_git_tag(full_ver)
+        prompt_install_mod(jar_path)
+        prompt_rename_jar(jar_path)
+
+        save_history({
+            "version":   full_ver,
+            "suffix":    suffix or "dev",
+            "build_num": build_num,
+            "jar":       jar_path.name if jar_path.exists() else jar_name,
+            "size_kb":   size_kb,
+            "elapsed":   elapsed,
+            "timestamp": datetime.now().isoformat(),
+            "success":   True,
+        })
+    else:
+        print(f"\n{R}✖ Build failed!{RST}  {DM}({elapsed:.1f}s){RST}\n")
+        save_history({
+            "version":   full_ver,
+            "suffix":    suffix or "dev",
+            "build_num": build_num,
+            "jar":       jar_name,
+            "elapsed":   elapsed,
+            "timestamp": datetime.now().isoformat(),
+            "success":   False,
+        })
+
+    return success
 
 # ─────────────────────────────────────────────────────────────
 #  COMMANDS
@@ -358,7 +385,7 @@ def cmd_info():
     if history:
         last   = history[0]
         status = f"{G}✔ success{RST}" if last.get("success") else f"{R}✖ failed{RST}"
-        print(f"{DM}  Last build:{RST} {W}{last['version']}{RST}  {status}  {DM}{last['timestamp'][:16]}{RST}")
+        print(f"  {DM}Last build:{RST} {W}{last['version']}{RST}  {status}  {DM}{last['timestamp'][:16]}{RST}")
     print()
 
 def cmd_history():
@@ -380,11 +407,10 @@ def cmd_history():
         ts      = entry.get("timestamp", "")[:16]
         elapsed = entry.get("elapsed", 0)
         size    = entry.get("size_kb", 0)
-
-        channel_color = {"stable": G, "beta": Y, "alpha": M, "rc": B, "dev": DM}.get(suffix, DM)
+        ch_col  = {"stable": G, "beta": Y, "alpha": M, "rc": B, "dev": DM}.get(suffix, DM)
 
         line  = f"  {status} {W}{ver:<30}{RST}"
-        line += f" {channel_color}{suffix:<8}{RST}"
+        line += f" {ch_col}{suffix:<8}{RST}"
         line += f" {DM}{size:>6} KB  {elapsed:>5.1f}s  {ts}{RST}"
         print(line)
 
@@ -395,8 +421,8 @@ def cmd_history():
 def cmd_clean():
     print(f"\n{Y}⚠ Clean build artifacts{RST}\n")
     targets = [
-        (ROOT / "build",   "build/  (all compiled output)"),
-        (ROOT / ".gradle", ".gradle/  (gradle cache)"),
+        (ROOT / "build",   "build/"),
+        (ROOT / ".gradle", ".gradle/"),
     ]
     for path, label in targets:
         mark = f"{W}●{RST}" if path.exists() else f"{DM}○{RST}"
@@ -410,6 +436,46 @@ def cmd_clean():
             shutil.rmtree(path)
             print(f"  {G}✔ Removed:{RST} {label}")
     print(f"\n{G}✔ Clean complete.{RST}\n")
+
+def cmd_clean_libs():
+    print(f"\n{Y}⚠ Clean build/libs/{RST}\n")
+    if not BUILD_DIR.exists():
+        print(f"  {DM}build/libs/ zaten boş.{RST}\n")
+        return
+    jars = list(BUILD_DIR.rglob("*.jar"))
+    if not jars:
+        print(f"  {DM}Hiç JAR bulunamadı.{RST}\n")
+        return
+    for j in jars:
+        print(f"  {DM}● {j.relative_to(ROOT)}{RST}")
+    print()
+    if input(f"  {Y}Tümünü sil? (y/N):{RST} ").strip().lower() != "y":
+        print(f"\n  {DM}Cancelled.{RST}\n")
+        return
+    shutil.rmtree(BUILD_DIR)
+    print(f"\n  {G}✔ build/libs/ temizlendi.{RST}\n")
+
+def cmd_clean_mods():
+    print(f"\n{Y}⚠ Minecraft mods — StashFinder JAR temizle{RST}\n")
+    mods_dir = find_mods_dir()
+    if not mods_dir:
+        print(f"  {R}Mods dizini bulunamadı.{RST}\n")
+        return
+    jars = [p for p in mods_dir.iterdir()
+            if p.name.startswith("stashfinder-") and p.suffix == ".jar"]
+    if not jars:
+        print(f"  {DM}Mods dizininde StashFinder JAR bulunamadı.{RST}\n")
+        return
+    for j in jars:
+        print(f"  {DM}● {j.name}{RST}")
+    print()
+    if input(f"  {Y}Tümünü sil? (y/N):{RST} ").strip().lower() != "y":
+        print(f"\n  {DM}Cancelled.{RST}\n")
+        return
+    for j in jars:
+        j.unlink()
+        print(f"  {G}✔ Silindi:{RST} {j.name}")
+    print()
 
 def cmd_reset():
     current = get_build_number()
@@ -431,17 +497,19 @@ def cmd_build(suffix: str):
 #  INTERACTIVE MENU
 # ─────────────────────────────────────────────────────────────
 MENU_ITEMS = [
-    ("1", "dev",    f"{DM}○  Dev Build      {RST}", "Quick dev build, auto-increments n"),
-    ("2", "beta",   f"{Y}◐  Beta Build     {RST}", "Beta release, e.g. 1.0.0-beta5"),
-    ("3", "alpha",  f"{M}◑  Alpha Build    {RST}", "Alpha release, e.g. 1.0.0-alpha5"),
-    ("4", "rc",     f"{B}◉  Release Cand.  {RST}", "RC build, e.g. 1.0.0-rc5"),
-    ("5", "stable", f"{G}●  Stable Release {RST}", "Clean release JAR, e.g. 1.0.0"),
-    ("─", None,     None, None),
-    ("i", "info",   f"{C}   Info           {RST}", "Show current build info"),
-    ("h", "hist",   f"{C}   History        {RST}", "Show build history"),
-    ("c", "clean",  f"{Y}   Clean          {RST}", "Remove build artifacts"),
-    ("r", "reset",  f"{R}   Reset n        {RST}", "Reset build number to 1"),
-    ("q", "quit",   f"{DM}   Quit           {RST}", "Exit"),
+    ("1", f"{DM}○  Dev Build      {RST}", "Quick dev build, auto-increments n"),
+    ("2", f"{Y}◐  Beta Build     {RST}", "Beta release, e.g. 1.0.0-beta5"),
+    ("3", f"{M}◑  Alpha Build    {RST}", "Alpha release, e.g. 1.0.0-alpha5"),
+    ("4", f"{B}◉  Release Cand.  {RST}", "RC build, e.g. 1.0.0-rc5"),
+    ("5", f"{G}●  Stable Release {RST}", "Clean release JAR, e.g. 1.0.0"),
+    ("─", None, None),
+    ("i", f"{C}   Info           {RST}", "Show current build info"),
+    ("h", f"{C}   History        {RST}", "Show build history"),
+    ("c", f"{Y}   Clean          {RST}", "Remove build/ and .gradle/"),
+    ("l", f"{Y}   Clean Libs     {RST}", "Remove build/libs/ JAR files"),
+    ("m", f"{Y}   Clean Mods     {RST}", "Remove StashFinder JARs from mods/"),
+    ("r", f"{R}   Reset n        {RST}", "Reset build number to 1"),
+    ("q", f"{DM}   Quit           {RST}", "Exit"),
 ]
 
 def interactive_menu():
@@ -450,56 +518,63 @@ def interactive_menu():
         print_header()
         print(f"  {BLD}{W}Select build type:{RST}\n")
 
-        for key, _, label, desc in MENU_ITEMS:
-            if key == "─":
+        for item in MENU_ITEMS:
+            if item[0] == "─":
                 separator(char="·", width=44, color=DM)
                 continue
+            key, label, desc = item
             print(f"  {C}[{key}]{RST}  {label}  {DM}{desc}{RST}")
 
         print()
         choice = input(f"  {W}>{RST} ").strip().lower()
         print()
 
-        if choice in ("q", "quit", "exit"):
-            print(f"  {DM}Bye!{RST}\n")
-            break
-        elif choice in ("1", "dev", ""):
-            cmd_build("")
-        elif choice in ("2", "beta"):
-            cmd_build("beta")
-        elif choice in ("3", "alpha"):
-            cmd_build("alpha")
-        elif choice in ("4", "rc"):
-            cmd_build("rc")
-        elif choice in ("5", "stable"):
-            clear()
-            print_header()
-            print(f"  {G}● Stable Release Build{RST}\n")
-            print(f"  {Y}⚠ This will produce the final release JAR.{RST}")
-            print(f"  {DM}  Output: build/libs/release/{RST}\n")
-            if input(f"  {Y}Confirm stable build? (y/N):{RST} ").strip().lower() == "y":
-                run_gradle("stable")
-                print()
+        match choice:
+            case "1" | "dev" | "":
+                cmd_build("")
+            case "2" | "beta":
+                cmd_build("beta")
+            case "3" | "alpha":
+                cmd_build("alpha")
+            case "4" | "rc":
+                cmd_build("rc")
+            case "5" | "stable":
+                clear()
+                print_header()
+                print(f"  {G}● Stable Release Build{RST}\n")
+                print(f"  {Y}⚠ This will produce the final release JAR.{RST}")
+                print(f"  {DM}  Output: build/libs/release/{RST}\n")
+                if input(f"  {Y}Confirm? (y/N):{RST} ").strip().lower() == "y":
+                    run_gradle("stable")
+                    print()
+                    input(f"  {DM}Press Enter to continue...{RST}")
+                else:
+                    print(f"\n  {DM}Cancelled.{RST}")
+                    import time; time.sleep(1)
+            case "i" | "info":
+                clear(); cmd_info()
                 input(f"  {DM}Press Enter to continue...{RST}")
-            else:
-                print(f"\n  {DM}Cancelled.{RST}")
+            case "h" | "hist" | "history":
+                cmd_history()
+                input(f"  {DM}Press Enter to continue...{RST}")
+            case "c" | "clean":
+                cmd_clean()
+                input(f"  {DM}Press Enter to continue...{RST}")
+            case "l" | "libs":
+                cmd_clean_libs()
+                input(f"  {DM}Press Enter to continue...{RST}")
+            case "m" | "mods":
+                cmd_clean_mods()
+                input(f"  {DM}Press Enter to continue...{RST}")
+            case "r" | "reset":
+                cmd_reset()
+                input(f"  {DM}Press Enter to continue...{RST}")
+            case "q" | "quit" | "exit":
+                print(f"  {DM}Bye!{RST}\n")
+                break
+            case _:
+                print(f"  {R}Unknown option: {choice}{RST}")
                 import time; time.sleep(1)
-        elif choice in ("i", "info"):
-            clear()
-            cmd_info()
-            input(f"  {DM}Press Enter to continue...{RST}")
-        elif choice in ("h", "hist", "history"):
-            cmd_history()
-            input(f"  {DM}Press Enter to continue...{RST}")
-        elif choice in ("c", "clean"):
-            cmd_clean()
-            input(f"  {DM}Press Enter to continue...{RST}")
-        elif choice in ("r", "reset"):
-            cmd_reset()
-            input(f"  {DM}Press Enter to continue...{RST}")
-        else:
-            print(f"  {R}Unknown option: {choice}{RST}")
-            import time; time.sleep(1)
 
 # ─────────────────────────────────────────────────────────────
 #  ENTRY POINT
@@ -511,9 +586,7 @@ def main():
         interactive_menu()
         return
 
-    cmd = args[0].lower()
-
-    match cmd:
+    match args[0].lower():
         case "dev":     cmd_build("")
         case "beta":    cmd_build("beta")
         case "alpha":   cmd_build("alpha")
@@ -522,13 +595,16 @@ def main():
         case "info":    cmd_info()
         case "history": cmd_history()
         case "clean":   cmd_clean()
+        case "libs":    cmd_clean_libs()
+        case "mods":    cmd_clean_mods()
         case "reset":   cmd_reset()
         case "help" | "--help" | "-h":
             print(__doc__)
         case _:
-            print(f"\n{R}Unknown command: {cmd}{RST}")
+            print(f"\n{R}Unknown command: {args[0]}{RST}")
             print(f"{DM}Run without arguments for interactive menu.{RST}\n")
             sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

@@ -2,7 +2,7 @@
 
 > **Never forget where you stored it.**
 
-ChestMemory automatically indexes every chest you open and lets you instantly search for any item across all your chests — with distance, direction, and a full slot preview.
+StashFinder automatically indexes every chest you open and lets you instantly search for any item across all your chests — with distance, direction, and a full slot preview.
 
 ---
 

@@ -1,5 +1,45 @@
 [
   {
+    "version": "1.0.0-beta19",
+    "suffix": "beta",
+    "build_num": 19,
+    "jar": "stashfinder-1.21.11-1.0.0-beta19.jar",
+    "size_kb": 125.4,
+    "elapsed": 77.098714,
+    "timestamp": "2026-03-14T02:02:57.325457",
+    "success": true
+  },
+  {
+    "version": "1.0.0-beta18",
+    "suffix": "beta",
+    "build_num": 18,
+    "jar": "stashfinder-1.21.11-1.0.0-beta18.jar",
+    "size_kb": 91.1,
+    "elapsed": 12.870392,
+    "timestamp": "2026-03-14T01:32:31.034312",
+    "success": true
+  },
+  {
+    "version": "1.0.0-beta17",
+    "suffix": "beta",
+    "build_num": 17,
+    "jar": "stashfinder-1.21.11-1.0.0-beta17.jar",
+    "size_kb": 0,
+    "elapsed": 18.180828,
+    "timestamp": "2026-03-14T01:27:51.921209",
+    "success": true
+  },
+  {
+    "version": "1.0.0-beta16",
+    "suffix": "beta",
+    "build_num": 16,
+    "jar": "stashfinder-1.21.11-1.0.0-beta16.jar",
+    "size_kb": 0,
+    "elapsed": 27.600844,
+    "timestamp": "2026-03-14T01:23:22.735538",
+    "success": true
+  },
+  {
     "version": "1.0.0-beta15",
     "suffix": "beta",
     "build_num": 15,

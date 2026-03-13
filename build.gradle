@@ -22,33 +22,31 @@ def suffix  = project.findProperty("version_suffix")?.trim() ?: ""
 def mcVer   = project.minecraft_version
 def modVer  = project.mod_version
 
-def computedVersion
 def jarSuffix
 def releaseDir
 
 switch (suffix.toLowerCase()) {
     case "stable":
-        computedVersion = "${modVer}"
-        jarSuffix       = ""
-        releaseDir      = "release"
+        jarSuffix  = ""
+        releaseDir = "release"
         break
     case "beta":
     case "alpha":
     case "rc":
-        computedVersion = "${modVer}-${suffix}${buildNumber}"
-        jarSuffix       = "-${suffix}${buildNumber}"
-        releaseDir      = suffix.toLowerCase()
+        jarSuffix  = "-${suffix}${buildNumber}"
+        releaseDir = suffix.toLowerCase()
         break
     default:
-        computedVersion = "${modVer}-dev+n${buildNumber}"
-        jarSuffix       = "-dev+n${buildNumber}"
-        releaseDir      = "dev"
+        jarSuffix  = "-dev+n${buildNumber}"
+        releaseDir = "dev"
         break
 }
 
-version = computedVersion
+// Gradle'ın project.version'ını boş bırak — JAR adına eklenmesin
+version = ""
 group   = project.maven_group
 
+// JAR adı: stashfinder-1.21.11-1.0.0-beta3.jar
 def jarBaseName = "${project.archives_base_name}-${mcVer}-${modVer}${jarSuffix}"
 def outputDir   = file("${buildDir}/libs/${releaseDir}")
 
@@ -65,7 +63,6 @@ gradle.taskGraph.whenReady { graph ->
         println "╔══════════════════════════════════════════╗"
         println "║  StashFinder Build System                ║"
         println "║  MC:      ${mcVer.padRight(30)}║"
-        println "║  Version: ${computedVersion.padRight(30)}║"
         println "║  JAR:     ${jarBaseName.padRight(30)}║"
         println "║  Output:  build/libs/${releaseDir.padRight(24)}║"
         println "║  Build #: n${buildNumber.toString().padRight(29)}║"
@@ -86,10 +83,10 @@ dependencies {
 }
 
 processResources {
-    inputs.property "version", project.version
+    inputs.property "version", project.mod_version
     filteringCharset "UTF-8"
     filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "version": project.mod_version
     }
 }
 
@@ -131,7 +128,6 @@ tasks.register("buildInfo") {
         println ""
         println "  Mod:     StashFinder"
         println "  MC:      ${mcVer}"
-        println "  Version: ${computedVersion}"
         println "  JAR:     ${jarBaseName}.jar"
         println "  Output:  build/libs/${releaseDir}/"
         println "  Build #: n${buildNumber}"

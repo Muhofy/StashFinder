@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Output File Name
-OUTPUT_FILE="docs/project-structure$(date +'%Y%m%d_%H%M%S').txt"
+OUTPUT_FILE="docs/project-structure/project-structure$(date +'%Y%m%d_%H%M%S').txt"
 
 # Scanning Directory
 TARGET_DIR="."

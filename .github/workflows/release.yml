@@ -82,8 +82,11 @@ jobs:
           else
             DIR="build/libs/$SUFFIX"
           fi
-          JAR=$(find "$DIR" -name "stashfinder-*.jar" ! -name "*-sources.jar" | head -1)
-          echo "path=$JAR"          >> $GITHUB_OUTPUT
+          echo "Looking in: $DIR"
+          ls -la "$DIR" || echo "Directory not found"
+          JAR=$(find "$DIR" -maxdepth 1 -name "stashfinder-*.jar" ! -name "*-sources.jar" | head -1)
+          echo "Found JAR: $JAR"
+          echo "path=$JAR"             >> $GITHUB_OUTPUT
           echo "name=$(basename $JAR)" >> $GITHUB_OUTPUT
 
       # ── CHANGELOG'dan release notu al ───────────────────────
