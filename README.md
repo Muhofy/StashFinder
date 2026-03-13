@@ -1,92 +1,201 @@
-# 📦 ChestMemory
+# StashFinder
 
-> **Never forget where you stored it.**
-
-ChestMemory automatically indexes every chest you open, so you can instantly search for any item and navigate directly to it — no more opening every chest to find what you need.
-
----
-
-## ✨ Features
-
-- **Auto Indexing** — Every chest you open is silently recorded. No setup required.
-- **Instant Search** — Press `F` to open the search overlay. Type an item name and see every chest it's stored in, with distance and direction.
-- **Chest Records** — Press `G` to browse all indexed chests with a full slot-by-slot preview.
-- **Navigation** — Select any chest from search or records to activate a HUD compass pointing directly to it.
-- **Custom Names** — Rename any chest (e.g. "Weapons", "Food Storage") for easier identification.
-- **Per-World Storage** — Each world has its own separate index. Nothing gets mixed up.
-- **Dimension Aware** — Only shows chests from your current dimension. Others are clearly marked.
+[![Modrinth](https://img.shields.io/modrinth/v/stashfinder?label=Modrinth&logo=modrinth)](https://modrinth.com/mod/stashfinder)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-brightgreen)](https://minecraft.net)
+[![Fabric](https://img.shields.io/badge/Loader-Fabric-blue)](https://fabricmc.net)
 
 ---
 
-## 🖼️ Screenshots
+## 📋 Table of Contents
 
-### Search Overlay
-![Search Overlay](screenshots/search_overlay.png)
+- [Requirements](#-requirements)
+- [Installation](#-installation)
+- [Keybinds](#-keybinds)
+- [Configuration](#-configuration)
+- [Data Storage](#-data-storage)
+- [Building from Source](#-building-from-source)
+- [Contributing](#-contributing)
+- [Bug Reports & Feature Requests](#-bug-reports--feature-requests)
+- [License](#-license)
 
-### Chest Records
-![Chest Records](screenshots/chest_records.png)
+---
 
-### HUD Compass
-![HUD Compass](screenshots/hud_compass.png)
+## ✅ Requirements
+
+| Dependency | Version |
+|------------|---------|
+| Minecraft | `1.21.11` |
+| Fabric Loader | `>=0.18.1` |
+| Fabric API | `0.141.1+1.21.11` |
+| Java | `21` |
+
+---
+
+## 📦 Installation
+
+1. Install [Fabric Loader](https://fabricmc.net/use/installer/) for Minecraft 1.21.11
+2. Install [Fabric API](https://modrinth.com/mod/fabric-api)
+3. Download the latest JAR from [Modrinth](https://modrinth.com/mod/stashfinder) or [GitHub Releases](https://github.com/muhofy/stashfinder/releases)
+4. Drop the JAR into `.minecraft/mods/`
+5. Launch Minecraft
+
+> Client-side only. No server installation required.
 
 ---
 
 ## ⌨️ Keybinds
 
-| Key | Action |
-|-----|--------|
-| `F` | Open search overlay |
-| `G` | Open chest records screen |
+| Key | Action | Category |
+|-----|--------|----------|
+| `F` | Open Search Overlay | ChestMemory |
+| `G` | Open Chest Records | ChestMemory |
 
-> Both keybinds can be changed in Minecraft's Controls settings.
+Keybinds can be remapped in **Options → Controls → Key Binds → StashFinder**.
 
 ---
 
 ## ⚙️ Configuration
 
-Config file is located at: `.minecraft/config/chestmemory/config.json`
+**Location:** `.minecraft/config/stashfinder/config.json`
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `toastEnabled` | `true` | Show toast when a chest is indexed |
-| `toastPosition` | `BOTTOM_RIGHT` | Toast position on screen |
-| `compassPosition` | `TOP_LEFT` | Navigation compass position |
+Created automatically with defaults on first launch.
 
----
+```json
+{
+  "toastEnabled": true,
+  "toastPosition": "BOTTOM_RIGHT",
+  "compassPosition": "TOP_LEFT"
+}
+```
 
-## 📋 How It Works
-
-1. **Open any chest** — ChestMemory silently records its contents and location.
-2. **Press `F`** — Type what you're looking for. Results appear instantly with distance and direction.
-3. **Press Enter or click** — A compass appears on your HUD guiding you to the chest.
-4. **Press `G`** — Browse all your indexed chests and preview their contents slot by slot.
-
----
-
-## 🔧 Requirements
-
-- Minecraft 1.21.11
-- Fabric Loader
-- Fabric API
+| Key | Type | Default | Options |
+|-----|------|---------|---------|
+| `toastEnabled` | `boolean` | `true` | `true` / `false` |
+| `toastPosition` | `string` | `BOTTOM_RIGHT` | `TOP_LEFT` `TOP_RIGHT` `BOTTOM_LEFT` `BOTTOM_RIGHT` |
+| `compassPosition` | `string` | `TOP_LEFT` | `TOP_LEFT` `TOP_RIGHT` |
 
 ---
 
-## 📥 Installation
+## 💾 Data Storage
 
-1. Install [Fabric Loader](https://fabricmc.net/use/)
-2. Download [Fabric API](https://modrinth.com/mod/fabric-api)
-3. Download ChestMemory from [Modrinth](#) or [CurseForge](#)
-4. Place both `.jar` files in your `.minecraft/mods` folder
-5. Launch Minecraft with the Fabric profile
-0
+Chest data is stored per-world at:
+```
+.minecraft/config/stashfinder/<world_name>/chests.json
+```
+
+The file is created automatically. If the file becomes corrupted, a backup is saved as `chests.json.bak` and a fresh file is created.
+
+**Data format:**
+```json
+{
+  "chests": [
+    {
+      "id": "uuid",
+      "customName": "My Chest",
+      "x": -204, "y": 64, "z": 337,
+      "dimension": "minecraft:overworld",
+      "lastUpdated": "2026-03-14T00:05:00",
+      "isDouble": false,
+      "items": [
+        { "slot": 0, "itemId": "minecraft:diamond", "count": 32, "displayName": "Diamond" }
+      ]
+    }
+  ],
+  "searchHistory": ["diamond", "torch"]
+}
+```
+
+---
+
+## 🔧 Building from Source
+
+### Requirements
+- JDK 21
+- Python 3.10+ (optional, for the build CLI)
+
+### Build CLI
+```bash
+./build.py          # interactive menu
+./build.py dev      # dev build     → build/libs/dev/
+./build.py beta     # beta build    → build/libs/beta/
+./build.py rc       # release cand. → build/libs/rc/
+./build.py stable   # release       → build/libs/release/
+./build.py info     # build info
+./build.py history  # build history
+./build.py libs     # clean build/libs/
+./build.py mods     # clean mod from mods folder
+./build.py clean    # full clean
+./build.py reset    # reset build number
+```
+
+### Gradle
+```bash
+./gradlew build
+```
+
+### Version Suffix (`gradle.properties`)
+
+| `version_suffix` | Output |
+|-----------------|--------|
+| *(empty)* | `stashfinder-1.21.11-1.0.0-dev+n5.jar` |
+| `beta` | `stashfinder-1.21.11-1.0.0-beta5.jar` |
+| `alpha` | `stashfinder-1.21.11-1.0.0-alpha5.jar` |
+| `rc` | `stashfinder-1.21.11-1.0.0-rc5.jar` |
+| `stable` | `stashfinder-1.21.11-1.0.0.jar` |
+
+### Project Structure
+```
+src/main/java/com/muhofy/chestmemory/
+├── ChestMemoryMod.java
+├── config/
+│   └── ChestMemoryConfig.java
+├── data/
+│   ├── ChestItem.java
+│   ├── ChestRecord.java
+│   └── ChestStorage.java
+├── handler/
+│   ├── ChestOpenHandler.java
+│   ├── KeyHandler.java
+│   └── WorldEventHandler.java
+└── ui/
+    ├── ChestMemoryHud.java
+    ├── ChestRecordsScreen.java
+    ├── IconManager.java
+    └── SearchOverlay.java
+```
+
+---
+
+## 🤝 Contributing
+
+Pull requests are welcome. For major changes, open an issue first.
+
+1. Fork the repo
+2. Create a branch: `git checkout -b feat/my-feature`
+3. Commit: `git commit -m "feat: add my feature"`
+4. Push and open a Pull Request
+
+Please keep commits atomic and follow the existing code style.
+
+---
+
+## 🐛 Bug Reports & Feature Requests
+
+- [Report a bug](https://github.com/muhofy/stashfinder/issues/new?template=bug_report.yml)
+- [Request a feature](https://github.com/muhofy/stashfinder/issues/new?template=feature_request.yml)
+- [Ask a question](https://github.com/muhofy/stashfinder/issues/new?template=question.yml)
+
+Please search [existing issues](https://github.com/muhofy/stashfinder/issues) before opening a new one.
+
 ---
 
 ## 📄 License
 
-MIT License — see [LICENSE](LICENSE) for details.
+This project is licensed under the [MIT License](LICENSE).
 
----
+```
+MIT License — Copyright (c) 2026 Muhofy
+```
 
-## 🙏 Credits
-
-Made by [Muhofy](https://github.com/Muhofy)
+You are free to use, modify and distribute this project as long as you include the original license notice.
