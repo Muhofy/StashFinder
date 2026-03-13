@@ -1,0 +1,34 @@
+name: ❓ Question / Help
+description: Ask a question or get help with StashFinder
+title: "[Question]: "
+labels: ["question"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before asking, please check the [README](https://github.com/muhofy/stashfinder#readme) — your question might already be answered there!
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: StashFinder Version
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: mc_version
+    attributes:
+      label: Minecraft Version
+      placeholder: "e.g. 1.21.11"
+    validations:
+      required: true

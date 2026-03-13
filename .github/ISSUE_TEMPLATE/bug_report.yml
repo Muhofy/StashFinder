@@ -1,0 +1,118 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in StashFinder
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: ["Muhofy"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the form below as accurately as possible.
+
+  - type: checkboxes
+    id: existing
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I have searched existing issues and this bug has not been reported yet
+          required: true
+        - label: I am using the latest version of StashFinder
+          required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: "When I open a chest, the toast notification doesn't appear..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this bug?
+      placeholder: |
+        1. Open Minecraft and load a world
+        2. Walk up to a chest and open it
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: crash
+    attributes:
+      label: Crash Report / Log (if applicable)
+      description: Paste the crash report or relevant log lines here.
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: StashFinder Version
+      placeholder: "e.g. 1.0.0-beta3"
+    validations:
+      required: true
+
+  - type: input
+    id: mc_version
+    attributes:
+      label: Minecraft Version
+      placeholder: "e.g. 1.21.11"
+    validations:
+      required: true
+
+  - type: input
+    id: fabric_version
+    attributes:
+      label: Fabric Loader Version
+      placeholder: "e.g. 0.18.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: mods
+    attributes:
+      label: Other Mods Installed
+      description: List any other mods you have installed. This helps identify conflicts.
+      placeholder: |
+        - Sodium 0.8.6
+        - Cloth Config 20
+        - ...
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Android (Termux / PojavLauncher / Zalith etc.)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots or videos that might help.

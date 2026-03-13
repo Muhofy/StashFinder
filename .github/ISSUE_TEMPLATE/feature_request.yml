@@ -1,0 +1,60 @@
+name: ✨ Feature Request
+description: Suggest a new feature or improvement for StashFinder
+title: "[Feature]: "
+labels: ["enhancement"]
+assignees: ["Muhofy"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Got an idea to make StashFinder better? We'd love to hear it!
+
+  - type: checkboxes
+    id: existing
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I have searched existing issues and this feature has not been requested yet
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: Is your feature request related to a problem? Describe it.
+      placeholder: "I always lose track of where I stored my diamonds..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the feature you'd like to see.
+      placeholder: "A color tagging system for chests would help me organize..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or features you've considered?
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: How important is this to you?
+      options:
+        - Nice to have
+        - Would improve my experience significantly
+        - I can't use the mod properly without this
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional Context
+      description: Any mockups, screenshots or examples that illustrate your idea.
