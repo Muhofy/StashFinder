@@ -238,7 +238,7 @@ public class ChestRecordsScreen extends Screen {
         ctx.fill(px + POP_W-1, py, px + POP_W,     py + POP_H, C_BORDER);
         ctx.fill(px, py + POP_H-1, px + POP_W,     py + POP_H, C_BORDER);
 
-        renderTitleBar(ctx);
+        renderTitleBar(ctx, mouseX, mouseY);
         renderLeftPanel(ctx, mouseX, mouseY);
         renderDivider(ctx);
         renderRightPanel(ctx, mouseX, mouseY);
@@ -248,7 +248,7 @@ public class ChestRecordsScreen extends Screen {
     }
 
     // ── Başlık ────────────────────────────────────────────────────────────
-    private void renderTitleBar(DrawContext ctx) {
+    private void renderTitleBar(DrawContext ctx, int mouseX, int mouseY) {
         ctx.fill(px + 1, py + 1, px + POP_W - 1, py + TITLE_H, C_BG_HEADER);
         ctx.fill(px + 1, py + TITLE_H, px + POP_W - 1, py + TITLE_H + 1, C_DIVIDER);
 

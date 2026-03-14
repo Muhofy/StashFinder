@@ -291,7 +291,7 @@ public class SearchOverlay extends Screen {
             renderResults(ctx, bx, by, mouseX, mouseY);
         }
 
-        renderFooter(ctx, bx, by, bh);
+        renderFooter(ctx, bx, by, bh, mouseX, mouseY);
         super.render(ctx, mouseX, mouseY, delta);
     }
 
@@ -531,7 +531,7 @@ public class SearchOverlay extends Screen {
     }
 
     // ── Footer ────────────────────────────────────────────────────────────
-    private void renderFooter(DrawContext ctx, int bx, int by, int bh) {
+    private void renderFooter(DrawContext ctx, int bx, int by, int bh, int mouseX, int mouseY) {
         int fy = by + bh - FOOTER_H;
         ctx.fill(bx + 1, fy, bx + BOX_W - 1, fy + 1, C_DIVIDER);
         ctx.fill(bx + 1, fy + 1, bx + BOX_W - 1, by + bh - 1, C_BG_FOOTER);
