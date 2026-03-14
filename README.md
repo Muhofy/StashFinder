@@ -4,7 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Minecraft](https://img.shields.io/badge/Minecraft-1.21.11-brightgreen)](https://minecraft.net)
 [![Fabric](https://img.shields.io/badge/Loader-Fabric-blue)](https://fabricmc.net)
-
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
+[![CurseForge](https://img.shields.io/badge/CurseForge-v1.0.1-f16436?style=for-the-badge&logo=curseforge)](https://www.curseforge.com/minecraft/mc-mods/stashfinder)
 ---
 
 ## 📋 Table of Contents
