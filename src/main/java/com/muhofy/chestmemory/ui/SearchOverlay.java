@@ -325,7 +325,6 @@ public class SearchOverlay extends Screen {
         // Sıralama butonu — sağ üst köşe
         SortMode mode    = ChestStorage.getInstance().getSortMode();
         int modeIdx      = List.of(SORT_MODES).indexOf(mode);
-        String sortIcon  = SORT_ICONS[modeIdx];
         int btnX = bx + BOX_W - 40;
         int btnY2 = by + 5;
         int btnW = 34, btnH = INPUT_H - 10;
@@ -333,12 +332,16 @@ public class SearchOverlay extends Screen {
                         && mouseY >= btnY2 && mouseY < btnY2 + btnH;
         boolean sortAct  = showSortMenu;
 
-        // Arka plan
-        int sortBg = sortAct ? 0xFF1e3535 : (sortHov ? 0xFF252525 : 0xFF1a1a1a);
+        // Hover animasyonu
+        int sortBg = sortAct ? 0xFF1e3535
+                   : sortHov ? 0xFF2a2a2a
+                   : 0xFF1a1a1a;
         ctx.fill(btnX, btnY2, btnX + btnW, btnY2 + btnH, sortBg);
 
-        // Border — aktifse cyan, değilse dim
-        int borderCol = sortAct ? C_BORDER_ACC : (sortHov ? 0xFF3a3a3a : 0xFF2a2a2a);
+        // Border
+        int borderCol = sortAct ? C_BORDER_ACC
+                      : sortHov ? 0xFF4a4a4a
+                      : 0xFF2a2a2a;
         ctx.fill(btnX,          btnY2,          btnX + btnW, btnY2 + 1,       borderCol);
         ctx.fill(btnX,          btnY2 + btnH-1, btnX + btnW, btnY2 + btnH,    borderCol);
         ctx.fill(btnX,          btnY2,          btnX + 1,    btnY2 + btnH,    borderCol);
@@ -348,12 +351,21 @@ public class SearchOverlay extends Screen {
         if (sortAct)
             ctx.fill(btnX, btnY2, btnX + 2, btnY2 + btnH, C_BORDER_ACC);
 
-        // İkon + dropdown oku
-        int iconColor = sortAct ? C_CYAN : (sortHov ? 0xFFCCCCCC : 0xFF777777);
-        int iconX     = btnX + 5;
-        int iconTextY = btnY2 + (btnH - textRenderer.fontHeight) / 2;
-        ctx.drawTextWithShadow(textRenderer, Text.literal(sortIcon), iconX, iconTextY, iconColor);
-        ctx.drawTextWithShadow(textRenderer, Text.literal(sortAct ? "▴" : "▾"),
+        // PNG ikon varsa kullan, yoksa fallback unicode
+        IconManager im = IconManager.get();
+        int iconTextY  = btnY2 + (btnH - textRenderer.fontHeight) / 2;
+        int iconColor  = sortAct ? C_CYAN : sortHov ? 0xFFCCCCCC : 0xFF777777;
+        if (im.hasPng("sort")) {
+            int iconY = btnY2 + (btnH - 10) / 2;
+            im.draw(ctx, "sort", btnX + 4, iconY);
+        } else {
+            ctx.drawTextWithShadow(textRenderer,
+                    Text.literal(SORT_ICONS[modeIdx]),
+                    btnX + 5, iconTextY, iconColor);
+        }
+        // Dropdown oku
+        ctx.drawTextWithShadow(textRenderer,
+                Text.literal(sortAct ? "▴" : "▾"),
                 btnX + btnW - 10, iconTextY, iconColor);
 
         boolean hasText = searchField != null && !searchField.getText().isEmpty();
@@ -544,15 +556,18 @@ public class SearchOverlay extends Screen {
         int cbX = bx + BOX_W - 40;
         int cbY = fy + 2;
         int cbW = 34, cbH = FOOTER_H - 4;
-        ctx.fill(cbX, cbY, cbX + cbW, cbY + cbH, 0xFF2a1a1a);
-        ctx.fill(cbX, cbY, cbX + cbW, cbY + 1, 0xFF553333);
-        ctx.fill(cbX, cbY, cbX + 1, cbY + cbH, 0xFF553333);
-        ctx.fill(cbX, cbY + cbH - 1, cbX + cbW, cbY + cbH, 0xFF553333);
-        ctx.fill(cbX + cbW - 1, cbY, cbX + cbW, cbY + cbH, 0xFF553333);
+        boolean cbHov = mouseX >= cbX && mouseX < cbX + cbW
+                     && mouseY >= cbY && mouseY < cbY + cbH;
+        ctx.fill(cbX, cbY, cbX + cbW, cbY + cbH, cbHov ? 0xFF3a1a1a : 0xFF2a1a1a);
+        int cbBorder = cbHov ? 0xFFAA4444 : 0xFF553333;
+        ctx.fill(cbX,          cbY,          cbX + cbW, cbY + 1,       cbBorder);
+        ctx.fill(cbX,          cbY + cbH -1, cbX + cbW, cbY + cbH,     cbBorder);
+        ctx.fill(cbX,          cbY,          cbX + 1,   cbY + cbH,     cbBorder);
+        ctx.fill(cbX + cbW -1, cbY,          cbX + cbW, cbY + cbH,     cbBorder);
         ctx.drawCenteredTextWithShadow(textRenderer,
                 Text.literal(cls),
                 cbX + cbW / 2, cbY + (cbH - textRenderer.fontHeight) / 2,
-                C_RED);
+                cbHov ? 0xFFFF8888 : C_RED);
     }
 
     private void hint(DrawContext ctx, int x, int y, String key, String label) {

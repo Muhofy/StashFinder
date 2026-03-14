@@ -269,15 +269,18 @@ public class ChestRecordsScreen extends Screen {
         int cbX = px + POP_W - cancelW - 4;
         int cbY = py + 3;
         int cbH = TITLE_H - 6;
-        ctx.fill(cbX, cbY, cbX + cancelW, cbY + cbH, 0xFF2a1a1a);
-        ctx.fill(cbX, cbY, cbX + cancelW, cbY + 1, 0xFF553333);
-        ctx.fill(cbX, cbY, cbX + 1, cbY + cbH, 0xFF553333);
-        ctx.fill(cbX, cbY + cbH - 1, cbX + cancelW, cbY + cbH, 0xFF553333);
-        ctx.fill(cbX + cancelW - 1, cbY, cbX + cancelW, cbY + cbH, 0xFF553333);
+        boolean cbHov = mouseX >= cbX && mouseX < cbX + cancelW
+                     && mouseY >= cbY && mouseY < cbY + cbH;
+        ctx.fill(cbX, cbY, cbX + cancelW, cbY + cbH, cbHov ? 0xFF3a1a1a : 0xFF2a1a1a);
+        int cbBorder = cbHov ? 0xFFAA4444 : 0xFF553333;
+        ctx.fill(cbX,              cbY,          cbX + cancelW, cbY + 1,       cbBorder);
+        ctx.fill(cbX,              cbY + cbH -1, cbX + cancelW, cbY + cbH,     cbBorder);
+        ctx.fill(cbX,              cbY,          cbX + 1,       cbY + cbH,     cbBorder);
+        ctx.fill(cbX + cancelW -1, cbY,          cbX + cancelW, cbY + cbH,     cbBorder);
         ctx.drawCenteredTextWithShadow(textRenderer,
                 Text.literal(cancelTxt),
                 cbX + cancelW / 2, cbY + (cbH - textRenderer.fontHeight) / 2,
-                C_RED);
+                cbHov ? 0xFFFF8888 : C_RED);
     }
 
     // ── Sol Panel ─────────────────────────────────────────────────────────

@@ -1,5 +1,14 @@
 [
   {
+    "version": "1.0.1-dev+n1",
+    "suffix": "dev",
+    "build_num": 1,
+    "jar": "stashfinder-1.21.11-1.0.1-dev+n1.jar",
+    "elapsed": 16.156953,
+    "timestamp": "2026-03-14T20:18:24.436748",
+    "success": false
+  },
+  {
     "version": "1.0.1-beta29",
     "suffix": "beta",
     "build_num": 29,
