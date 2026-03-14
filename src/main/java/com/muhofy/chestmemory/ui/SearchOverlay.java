@@ -51,7 +51,7 @@ public class SearchOverlay extends Screen {
     private static final int HIST_ROW_H    = 20;
     private static final int HIST_HEADER_H = 16;
     private static final int FOOTER_H      = 20;
-    private static final int MAX_VISIBLE  = 8;  // ekranda görünen max satır
+    private static final int MAX_VISIBLE  = 4;  // ekranda görünen max satır
     private int scrollOffset = 0;               // kaç satır aşağı kaydırıldı
     private static final int MAX_HIST_SHOW = 5;
     private static final int SORT_ROW_H    = 18;
