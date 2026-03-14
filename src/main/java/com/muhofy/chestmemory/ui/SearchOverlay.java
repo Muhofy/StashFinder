@@ -104,12 +104,25 @@ public class SearchOverlay extends Screen {
     private int boxY() { return (height - boxH()) / 2; }
 
     // ── Init ──────────────────────────────────────────────────────────────
+    private ButtonWidget cancelBtn;
+
     @Override
     protected void init() {
         history = new ArrayList<>(ChestStorage.getInstance().getSearchHistory());
         rebuildField();
         rebuildSortToggle();
+        rebuildCancelBtn();
         rebuildButtons();
+    }
+
+    private void rebuildCancelBtn() {
+        if (cancelBtn != null) remove(cancelBtn);
+        int bx = boxX(), by = boxY(), bh = boxH();
+        cancelBtn = ButtonWidget.builder(Text.empty(), b -> close())
+                .dimensions(bx + BOX_W - 40, by + bh - FOOTER_H + 2, 34, FOOTER_H - 4)
+                .build();
+        cancelBtn.setAlpha(0f);
+        addDrawableChild(cancelBtn);
     }
 
     private void rebuildField() {
@@ -133,10 +146,11 @@ public class SearchOverlay extends Screen {
     private void rebuildSortToggle() {
         if (sortToggleBtn != null) remove(sortToggleBtn);
         int bx = boxX(), by = boxY();
+        // Input'un sağ tarafında, 38px genişliğinde
         sortToggleBtn = ButtonWidget.builder(Text.empty(), b -> {
             showSortMenu = !showSortMenu;
             rebuildButtons();
-        }).dimensions(bx + BOX_W - 36, by + 4, 30, INPUT_H - 8).build();
+        }).dimensions(bx + BOX_W - 40, by + 5, 34, INPUT_H - 10).build();
         sortToggleBtn.setAlpha(0f);
         addDrawableChild(sortToggleBtn);
     }
@@ -308,17 +322,39 @@ public class SearchOverlay extends Screen {
             }
         }
 
-        // Sıralama butonu (sağ üst)
-        SortMode mode   = ChestStorage.getInstance().getSortMode();
-        String sortIcon = SORT_ICONS[List.of(SORT_MODES).indexOf(mode)];
-        boolean sortHov = mouseX >= bx + BOX_W - 36 && mouseX < bx + BOX_W - 6
-                       && mouseY >= by + 4 && mouseY < by + INPUT_H - 4;
-        int sortBg = showSortMenu ? C_BG_SORT_SEL : (sortHov ? 0xFF2a2a2a : C_BG_SORT);
-        ctx.fill(bx + BOX_W - 36, by + 4, bx + BOX_W - 6, by + INPUT_H - 4, sortBg);
-        ctx.fill(bx + BOX_W - 36, by + 4, bx + BOX_W - 6, by + 5, showSortMenu ? C_BORDER_ACC : C_DIVIDER);
-        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal(sortIcon),
-                bx + BOX_W - 21, by + (INPUT_H - textRenderer.fontHeight) / 2,
-                sortHov || showSortMenu ? C_CYAN : C_TEXT_DIM);
+        // Sıralama butonu — sağ üst köşe
+        SortMode mode    = ChestStorage.getInstance().getSortMode();
+        int modeIdx      = List.of(SORT_MODES).indexOf(mode);
+        String sortIcon  = SORT_ICONS[modeIdx];
+        int btnX = bx + BOX_W - 40;
+        int btnY2 = by + 5;
+        int btnW = 34, btnH = INPUT_H - 10;
+        boolean sortHov  = mouseX >= btnX && mouseX < btnX + btnW
+                        && mouseY >= btnY2 && mouseY < btnY2 + btnH;
+        boolean sortAct  = showSortMenu;
+
+        // Arka plan
+        int sortBg = sortAct ? 0xFF1e3535 : (sortHov ? 0xFF252525 : 0xFF1a1a1a);
+        ctx.fill(btnX, btnY2, btnX + btnW, btnY2 + btnH, sortBg);
+
+        // Border — aktifse cyan, değilse dim
+        int borderCol = sortAct ? C_BORDER_ACC : (sortHov ? 0xFF3a3a3a : 0xFF2a2a2a);
+        ctx.fill(btnX,          btnY2,          btnX + btnW, btnY2 + 1,       borderCol);
+        ctx.fill(btnX,          btnY2 + btnH-1, btnX + btnW, btnY2 + btnH,    borderCol);
+        ctx.fill(btnX,          btnY2,          btnX + 1,    btnY2 + btnH,    borderCol);
+        ctx.fill(btnX + btnW-1, btnY2,          btnX + btnW, btnY2 + btnH,    borderCol);
+
+        // Cyan left accent — aktifse
+        if (sortAct)
+            ctx.fill(btnX, btnY2, btnX + 2, btnY2 + btnH, C_BORDER_ACC);
+
+        // İkon + dropdown oku
+        int iconColor = sortAct ? C_CYAN : (sortHov ? 0xFFCCCCCC : 0xFF777777);
+        int iconX     = btnX + 5;
+        int iconTextY = btnY2 + (btnH - textRenderer.fontHeight) / 2;
+        ctx.drawTextWithShadow(textRenderer, Text.literal(sortIcon), iconX, iconTextY, iconColor);
+        ctx.drawTextWithShadow(textRenderer, Text.literal(sortAct ? "▴" : "▾"),
+                btnX + btnW - 10, iconTextY, iconColor);
 
         boolean hasText = searchField != null && !searchField.getText().isEmpty();
         ctx.fill(bx + 1, by + INPUT_H - 1, bx + BOX_W - 1, by + INPUT_H,
@@ -499,12 +535,24 @@ public class SearchOverlay extends Screen {
         if (showHistory && !history.isEmpty()) {
             hint(ctx, fx, ffy, "↑↓", " " + sel + "  ");
             hint(ctx, fx + hw("↑↓ " + sel + "  "), ffy, "Enter", " " + apl + "  ");
-            hint(ctx, fx + hw("↑↓ " + sel + "  Enter " + apl + "  "), ffy, "Esc", " " + cls);
         } else {
             hint(ctx, fx, ffy, "↑↓", " " + sel + "  ");
             hint(ctx, fx + hw("↑↓ " + sel + "  "), ffy, "Enter", " " + nav + "  ");
-            hint(ctx, fx + hw("↑↓ " + sel + "  Enter " + nav + "  "), ffy, "Esc", " " + cls);
         }
+
+        // Cancel butonu — sağda
+        int cbX = bx + BOX_W - 40;
+        int cbY = fy + 2;
+        int cbW = 34, cbH = FOOTER_H - 4;
+        ctx.fill(cbX, cbY, cbX + cbW, cbY + cbH, 0xFF2a1a1a);
+        ctx.fill(cbX, cbY, cbX + cbW, cbY + 1, 0xFF553333);
+        ctx.fill(cbX, cbY, cbX + 1, cbY + cbH, 0xFF553333);
+        ctx.fill(cbX, cbY + cbH - 1, cbX + cbW, cbY + cbH, 0xFF553333);
+        ctx.fill(cbX + cbW - 1, cbY, cbX + cbW, cbY + cbH, 0xFF553333);
+        ctx.drawCenteredTextWithShadow(textRenderer,
+                Text.literal(cls),
+                cbX + cbW / 2, cbY + (cbH - textRenderer.fontHeight) / 2,
+                C_RED);
     }
 
     private void hint(DrawContext ctx, int x, int y, String key, String label) {

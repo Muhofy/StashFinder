@@ -63,7 +63,7 @@ public class ChestRecordsScreen extends Screen {
     private boolean confirmDel = false;
 
     private TextFieldWidget  renameField;
-    private ButtonWidget     btnNav, btnDel, btnYes, btnNo;
+    private ButtonWidget     btnNav, btnDel, btnYes, btnNo, btnCancel;
     private final List<ButtonWidget> rowBtns    = new ArrayList<>();
     private final List<ButtonWidget> renameBtns = new ArrayList<>();
 
@@ -117,6 +117,16 @@ public class ChestRecordsScreen extends Screen {
         addDrawableChild(btnDel);
         addDrawableChild(btnYes);
         addDrawableChild(btnNo);
+
+        // Cancel butonu — title bar sağ üst
+        String cancelTxt = Text.translatable("stashfinder.search.hint_close").getString();
+        int cancelW = textRenderer.getWidth(cancelTxt) + 12;
+        btnCancel = ButtonWidget.builder(Text.empty(), b -> close())
+                .dimensions(px + POP_W - cancelW - 4, py + 3, cancelW, TITLE_H - 6)
+                .build();
+        btnCancel.setAlpha(0f);
+        addDrawableChild(btnCancel);
+
         syncBtns();
     }
 
@@ -254,10 +264,20 @@ public class ChestRecordsScreen extends Screen {
         ctx.drawTextWithShadow(textRenderer, Text.literal(title),
                 textX, py + (TITLE_H - textRenderer.fontHeight) / 2, C_TEXT_GRAY);
 
-        String esc = "ESC";
-        ctx.drawTextWithShadow(textRenderer, Text.literal(esc),
-                px + POP_W - textRenderer.getWidth(esc) - 8,
-                py + (TITLE_H - textRenderer.fontHeight) / 2, C_TEXT_DIM);
+        String cancelTxt = Text.translatable("stashfinder.search.hint_close").getString();
+        int cancelW = textRenderer.getWidth(cancelTxt) + 12;
+        int cbX = px + POP_W - cancelW - 4;
+        int cbY = py + 3;
+        int cbH = TITLE_H - 6;
+        ctx.fill(cbX, cbY, cbX + cancelW, cbY + cbH, 0xFF2a1a1a);
+        ctx.fill(cbX, cbY, cbX + cancelW, cbY + 1, 0xFF553333);
+        ctx.fill(cbX, cbY, cbX + 1, cbY + cbH, 0xFF553333);
+        ctx.fill(cbX, cbY + cbH - 1, cbX + cancelW, cbY + cbH, 0xFF553333);
+        ctx.fill(cbX + cancelW - 1, cbY, cbX + cancelW, cbY + cbH, 0xFF553333);
+        ctx.drawCenteredTextWithShadow(textRenderer,
+                Text.literal(cancelTxt),
+                cbX + cancelW / 2, cbY + (cbH - textRenderer.fontHeight) / 2,
+                C_RED);
     }
 
     // ── Sol Panel ─────────────────────────────────────────────────────────
