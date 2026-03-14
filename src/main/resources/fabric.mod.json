@@ -8,7 +8,11 @@
     "Muhofy"
   ],
   "contact": {
-    "sources": "https://github.com/muhofy/stashfinder"
+    "sources": "https://github.com/Muhofy/StashFinder",
+    "issues": "https://github.com/Muhofy/StashFinder/issues/new/choose",
+    "modrinth": "https://modrinth.com/mod/stashfinder",
+    "wiki": "https://github.com/Muhofy/StashFinder/wiki",
+    "support": "https://ko-fi.com/muhofy"
   },
   "license": "MIT",
   "icon": "assets/stashfinder/icon.png",
