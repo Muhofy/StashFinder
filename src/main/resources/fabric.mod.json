@@ -14,7 +14,7 @@
     "wiki": "https://github.com/Muhofy/StashFinder/wiki",
     "support": "https://ko-fi.com/muhofy"
   },
-  "license": "MIT",
+  "license": "GPL-3.0-only",
   "icon": "assets/stashfinder/icon.png",
   "environment": "client",
   "entrypoints": {

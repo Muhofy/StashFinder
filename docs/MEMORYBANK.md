@@ -194,7 +194,7 @@ chestmemory/
 
 ## 🚀 Yayın Planı
 - **Platform:** Modrinth (öncelikli), CurseForge (ikincil)
-- **Lisans:** MIT
+- **Lisans:** GPL-3.0-only
 - **Versiyon:** 1.0.0 ile başla
 - **Mod ID:** `chestmemory`
 - **Maven Group:** `com.muhofy`

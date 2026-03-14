@@ -71,4 +71,4 @@ No. Indexing happens only when you open a chest, and search runs entirely on cac
 
 ## 📄 License
 
-MIT — [GitHub](https://github.com/muhofy/chestmemory)
+GPL-3.0-only — [GitHub](https://github.com/muhofy/chestmemory)

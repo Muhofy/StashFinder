@@ -195,20 +195,20 @@
 
 ## 🧪 PHASE 8 — Test
 
-- [ ] Yeni dünya oluştur, sandık aç → JSON dosyası oluştu mu?
+- [x] Yeni dünya oluştur, sandık aç → JSON dosyası oluştu mu?
 - [ ] Toast çıkıyor mu? (ilk açılış "indexlendi", sonraki "güncellendi")
-- [ ] Sandık içeriği değişince tekrar aç → JSON güncellendi mi?
-- [ ] Arama overlay'i aç → `F` tuşu çalışıyor mu?
-- [ ] "diamond" ara → doğru sandıklar listelendi mi?
-- [ ] Sonuca tıkla → yön göstergesi aktif oldu mu?
+- [x] Sandık içeriği değişince tekrar aç → JSON güncellendi mi?
+- [x] Arama overlay'i aç → `F` tuşu çalışıyor mu?
+- [x] "diamond" ara → doğru sandıklar listelendi mi?
+- [x] Sonuca tıkla → yön göstergesi aktif oldu mu?
 - [ ] Hedefe ulaş → toast çıktı mı, widget kayboldu mu?
-- [ ] Sandık Kayıtları aç → `G` tuşu çalışıyor mu?
-- [ ] Sol panelde tüm sandıklar listelendi mi?
-- [ ] Sağ panelde slot grid doğru görünüyor mu?
-- [ ] Rename çalışıyor mu? (✏️ butonu, Enter ile kaydet)
-- [ ] Silme onay çalışıyor mu? JSON'dan silindi mi?
+- [x] Sandık Kayıtları aç → `G` tuşu çalışıyor mu?
+- [x] Sol panelde tüm sandıklar listelendi mi?
+- [x] Sağ panelde slot grid doğru görünüyor mu?
+- [x] Rename çalışıyor mu? (✏️ butonu, Enter ile kaydet)
+- [x] Silme onay çalışıyor mu? JSON'dan silindi mi?
 - [ ] Nether'a geç → Overworld sandıkları "Farklı boyut" gösteriyor mu?
-- [ ] Farklı dünyaya geç → sandıklar karışmıyor mu?
+- [x] Farklı dünyaya geç → sandıklar karışmıyor mu?
 - [ ] Bozuk JSON ile mod açılırsa crash olmuyor mu?
 - [ ] 50+ sandık ekle → performans sorun çıkıyor mu?
 - [ ] Config sil → default değerlerle devam ediyor mu?

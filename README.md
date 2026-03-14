@@ -192,10 +192,10 @@ Please search [existing issues](https://github.com/muhofy/stashfinder/issues) be
 
 ## 📄 License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [GPL-3.0-only License](LICENSE).
 
 ```
-MIT License — Copyright (c) 2026 Muhofy
+GPL-3.0-only License — Copyright (c) 2026 Muhofy
 ```
 
 You are free to use, modify and distribute this project as long as you include the original license notice.
