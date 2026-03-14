@@ -1,5 +1,15 @@
 [
   {
+    "version": "1.0.1-beta23",
+    "suffix": "beta",
+    "build_num": 23,
+    "jar": "stashfinder-1.21.11-1.0.1-beta23.jar",
+    "size_kb": 125.2,
+    "elapsed": 58.978057,
+    "timestamp": "2026-03-14T16:26:56.165431",
+    "success": true
+  },
+  {
     "version": "1.0.0-beta22",
     "suffix": "beta",
     "build_num": 22,

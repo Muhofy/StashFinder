@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v1.0.1  —  2026-03-14
+
+### 🔧 Fixes
+
+- **Search results now show one row per matched item** instead of grouping all matches from the same chest into a single "5 different items" row. Searching `dia` now correctly shows Diamond, Diamond Sword, Diamond Pickaxe etc. as separate results.
+- **Search result limit increased** from 5 to 8 rows to accommodate multiple matches from the same chest.
+- **Localization fixes** — search footer hints (Select, Navigate, Apply, Close) and chest default name (`Chest #`) were hardcoded, now properly use lang keys.
+
+---
+
 ## v1.0.0  —  2026-03-14
 
 ### 🎉 Initial Release

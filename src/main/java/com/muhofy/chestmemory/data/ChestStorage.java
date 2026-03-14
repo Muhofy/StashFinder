@@ -149,16 +149,16 @@ public class ChestStorage {
 
         List<SearchResult> results = new ArrayList<>();
         for (ChestRecord chest : chests) {
-            List<ChestItem> matched = new ArrayList<>();
             for (ChestItem item : chest.getItems()) {
                 boolean nameMatch = item.getDisplayName() != null
                         && item.getDisplayName().toLowerCase(Locale.ROOT).contains(q);
                 boolean idMatch   = item.getItemId() != null
                         && item.getItemId().toLowerCase(Locale.ROOT).contains(q);
-                if (nameMatch || idMatch) matched.add(item);
+                if (nameMatch || idMatch) {
+                    // Her eşleşen item için ayrı SearchResult
+                    results.add(new SearchResult(chest, List.of(item), chest.distanceTo(px, pz)));
+                }
             }
-            if (!matched.isEmpty())
-                results.add(new SearchResult(chest, matched, chest.distanceTo(px, pz)));
         }
 
         results.sort(Comparator

@@ -363,10 +363,6 @@ public class SearchOverlay extends Screen {
             String name = r.firstItem() != null && r.firstItem().getDisplayName() != null
                     ? r.firstItem().getDisplayName()
                     : Text.translatable("stashfinder.item.unknown").getString();
-            if (r.matchedItems.size() > 1) {
-                long types = r.matchedItems.stream().map(ChestItem::getItemId).distinct().count();
-                if (types > 1) name = types + Text.translatable("stashfinder.item.multi").getString();
-            }
 
             String chestName = ChestStorage.getInstance().getDisplayName(r.chest);
             String sub       = chestName + "  " + r.chest.getX() + ", "
