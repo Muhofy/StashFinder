@@ -6,8 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.muhofy.chestmemory.ChestMemoryMod;
-import com.muhofy.chestmemory.data.ChestRecord;
-import com.muhofy.chestmemory.data.ChestItem;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.*;
@@ -18,6 +16,14 @@ import java.util.stream.Collectors;
 
 public class ChestStorage {
 
+    // ── Sort Mode ─────────────────────────────────────────────────────────
+    public enum SortMode {
+        DISTANCE,   // 📍 en yakın
+        DATE,       // 📅 en son indexlenen
+        COUNT,      // 🔢 en dolu
+        NAME        // 🔤 alfabetik
+    }
+
     private static final ChestStorage INSTANCE = new ChestStorage();
     public static ChestStorage getInstance() { return INSTANCE; }
     private ChestStorage() {}
@@ -26,7 +32,8 @@ public class ChestStorage {
     private final List<ChestRecord> chests        = new ArrayList<>();
     private final List<String>      searchHistory = new ArrayList<>();
     private static final int        MAX_HISTORY   = 8;
-    private String currentWorld = null;
+    private SortMode                sortMode      = SortMode.DISTANCE;
+    private String                  currentWorld  = null;
 
     // ── SearchResult ──────────────────────────────────────────────────────
     public static class SearchResult {
@@ -47,8 +54,8 @@ public class ChestStorage {
         }
     }
 
-    // ── SearchData (disk I/O için) ────────────────────────────────────────
-    public record SearchData(List<ChestRecord> chests, List<String> history) {}
+    // ── SearchData ────────────────────────────────────────────────────────
+    public record SearchData(List<ChestRecord> chests, List<String> history, String sortMode) {}
 
     // ── Init / World ──────────────────────────────────────────────────────
     public void init() {
@@ -64,15 +71,22 @@ public class ChestStorage {
         SearchData data = readFromDisk(worldName);
         chests.addAll(data.chests());
         searchHistory.addAll(data.history());
+        try {
+            sortMode = data.sortMode() != null
+                    ? SortMode.valueOf(data.sortMode()) : SortMode.DISTANCE;
+        } catch (IllegalArgumentException e) {
+            sortMode = SortMode.DISTANCE;
+        }
 
-        ChestMemoryMod.LOGGER.info("[ChestStorage] Loaded {} chests, {} history entries for world '{}'.",
-                chests.size(), searchHistory.size(), worldName);
+        ChestMemoryMod.LOGGER.info("[ChestStorage] Loaded {} chests for world '{}'.",
+                chests.size(), worldName);
     }
 
     public void unloadWorld() {
         currentWorld = null;
         chests.clear();
         searchHistory.clear();
+        sortMode = SortMode.DISTANCE;
     }
 
     // ── CRUD ──────────────────────────────────────────────────────────────
@@ -103,6 +117,14 @@ public class ChestStorage {
               .filter(c -> c.getId().equals(id))
               .findFirst()
               .ifPresent(c -> { c.setCustomName(newName); save(); });
+    }
+
+    // ── Sort Mode ─────────────────────────────────────────────────────────
+    public SortMode getSortMode() { return sortMode; }
+
+    public void setSortMode(SortMode mode) {
+        this.sortMode = mode;
+        save();
     }
 
     // ── Search History ────────────────────────────────────────────────────
@@ -143,7 +165,8 @@ public class ChestStorage {
                      .collect(Collectors.toList());
     }
 
-    public List<SearchResult> searchItems(String query, String activeDimension, double px, double pz) {
+    public List<SearchResult> searchItems(String query, String activeDimension,
+                                          double px, double pz) {
         if (query == null || query.isBlank()) return List.of();
         String q = query.toLowerCase(Locale.ROOT).trim();
 
@@ -154,17 +177,28 @@ public class ChestStorage {
                         && item.getDisplayName().toLowerCase(Locale.ROOT).contains(q);
                 boolean idMatch   = item.getItemId() != null
                         && item.getItemId().toLowerCase(Locale.ROOT).contains(q);
-                if (nameMatch || idMatch) {
-                    // Her eşleşen item için ayrı SearchResult
+                if (nameMatch || idMatch)
                     results.add(new SearchResult(chest, List.of(item), chest.distanceTo(px, pz)));
-                }
             }
         }
 
-        results.sort(Comparator
-                .<SearchResult, Boolean>comparing(r -> !r.chest.isInDimension(activeDimension))
-                .thenComparingDouble(r -> r.distance));
+        // Önce mevcut dimension, sonra diğerleri
+        Comparator<SearchResult> dimCmp = Comparator
+                .<SearchResult, Boolean>comparing(r -> !r.chest.isInDimension(activeDimension));
 
+        Comparator<SearchResult> sortCmp = switch (sortMode) {
+            case DATE    -> Comparator.comparing(
+                    r -> r.chest.getLastUpdated() != null ? r.chest.getLastUpdated() : "",
+                    Comparator.reverseOrder());
+            case COUNT   -> Comparator.comparingInt(
+                    (SearchResult r) -> r.chest.getItems().stream()
+                            .mapToInt(ChestItem::getCount).sum()).reversed();
+            case NAME    -> Comparator.comparing(
+                    r -> getDisplayName(r.chest).toLowerCase(Locale.ROOT));
+            default      -> Comparator.comparingDouble(r -> r.distance); // DISTANCE
+        };
+
+        results.sort(dimCmp.thenComparing(sortCmp));
         return results;
     }
 
@@ -187,7 +221,7 @@ public class ChestStorage {
 
     private SearchData readFromDisk(String worldName) {
         Path file = getFilePath(worldName);
-        if (!Files.exists(file)) return new SearchData(new ArrayList<>(), new ArrayList<>());
+        if (!Files.exists(file)) return new SearchData(new ArrayList<>(), new ArrayList<>(), null);
         try (Reader r = Files.newBufferedReader(file)) {
             JsonObject root   = JsonParser.parseReader(r).getAsJsonObject();
             Type listType     = new TypeToken<List<ChestRecord>>(){}.getType();
@@ -197,15 +231,18 @@ public class ChestStorage {
                     ? gson.fromJson(root.get("chests"), listType) : new ArrayList<>();
             List<String> loadedHistory     = root.has("searchHistory")
                     ? gson.fromJson(root.get("searchHistory"), strType) : new ArrayList<>();
+            String loadedSort              = root.has("sortMode")
+                    ? root.get("sortMode").getAsString() : null;
 
             return new SearchData(
                     loadedChests  != null ? loadedChests  : new ArrayList<>(),
-                    loadedHistory != null ? loadedHistory : new ArrayList<>()
+                    loadedHistory != null ? loadedHistory : new ArrayList<>(),
+                    loadedSort
             );
         } catch (Exception e) {
-            ChestMemoryMod.LOGGER.error("[ChestStorage] Failed to read chests.json — creating backup.", e);
+            ChestMemoryMod.LOGGER.error("[ChestStorage] Failed to read chests.json — backing up.", e);
             backupCorrupted(file);
-            return new SearchData(new ArrayList<>(), new ArrayList<>());
+            return new SearchData(new ArrayList<>(), new ArrayList<>(), null);
         }
     }
 
@@ -216,6 +253,7 @@ public class ChestStorage {
             JsonObject root = new JsonObject();
             root.add("chests", gson.toJsonTree(data));
             root.add("searchHistory", gson.toJsonTree(searchHistory));
+            root.addProperty("sortMode", sortMode.name());
             try (Writer w = Files.newBufferedWriter(file)) {
                 gson.toJson(root, w);
             }

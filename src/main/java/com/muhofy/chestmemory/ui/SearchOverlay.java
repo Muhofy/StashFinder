@@ -3,6 +3,7 @@ package com.muhofy.chestmemory.ui;
 import com.muhofy.chestmemory.data.ChestItem;
 import com.muhofy.chestmemory.data.ChestRecord;
 import com.muhofy.chestmemory.data.ChestStorage;
+import com.muhofy.chestmemory.data.ChestStorage.SortMode;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
@@ -29,6 +30,8 @@ public class SearchOverlay extends Screen {
     private static final int C_BG_HISTORY  = 0x33FFFFFF;
     private static final int C_BG_FOOTER   = 0xFF0d0d0d;
     private static final int C_BG_SLOT     = 0xFF2a2a2a;
+    private static final int C_BG_SORT     = 0xFF222222;
+    private static final int C_BG_SORT_SEL = 0xFF1a3a3a;
     private static final int C_BORDER_ACC  = 0xFF55FFFF;
     private static final int C_BORDER      = 0xFF2a2a2a;
     private static final int C_DIVIDER     = 0xFF222222;
@@ -42,46 +45,59 @@ public class SearchOverlay extends Screen {
     private static final int C_RED         = 0xFFFF5555;
 
     // ── Layout ────────────────────────────────────────────────────────────
-    private static final int BOX_W        = 360;
-    private static final int INPUT_H      = 28;
-    private static final int ROW_H        = 34;
-    private static final int HIST_ROW_H   = 20;
-    private static final int FOOTER_H     = 20;
-    private static final int MAX_RESULTS  = 5;
-    private static final int MAX_HIST_SHOW = 5; // gösterilecek max geçmiş
-    private static final int BOX_H_RESULTS = INPUT_H + 1 + MAX_RESULTS * ROW_H + FOOTER_H;
+    private static final int BOX_W         = 360;
+    private static final int INPUT_H       = 28;
+    private static final int ROW_H         = 34;
+    private static final int HIST_ROW_H    = 20;
+    private static final int HIST_HEADER_H = 16;
+    private static final int FOOTER_H      = 20;
+    private static final int MAX_VISIBLE  = 8;  // ekranda görünen max satır
+    private int scrollOffset = 0;               // kaç satır aşağı kaydırıldı
+    private static final int MAX_HIST_SHOW = 5;
+    private static final int SORT_ROW_H    = 18;
+    private static final int SORT_COUNT    = 4;
+
+    // Sort seçenekleri
+    private static final SortMode[] SORT_MODES = {
+        SortMode.DISTANCE, SortMode.DATE, SortMode.COUNT, SortMode.NAME
+    };
+    private static final String[] SORT_ICONS  = { "📍", "📅", "🔢", "🔤" };
+    private static final String[] SORT_KEYS   = {
+        "stashfinder.sort.distance",
+        "stashfinder.sort.date",
+        "stashfinder.sort.count",
+        "stashfinder.sort.name"
+    };
 
     // ── State ─────────────────────────────────────────────────────────────
     private TextFieldWidget searchField;
     private List<ChestStorage.SearchResult> results  = new ArrayList<>();
     private List<String>                    history  = new ArrayList<>();
-    private int  selectedIndex  = 0;
-    private boolean showHistory = true; // input boşken true
+    private int     selectedIndex = 0;
+    private boolean showHistory   = true;
+    private boolean showSortMenu  = false;
 
     private final List<ButtonWidget> resultButtons  = new ArrayList<>();
     private final List<ButtonWidget> historyButtons = new ArrayList<>();
     private final List<ButtonWidget> deleteButtons  = new ArrayList<>();
+    private final List<ButtonWidget> sortButtons    = new ArrayList<>();
+    private ButtonWidget             sortToggleBtn;
 
     public SearchOverlay() {
         super(Text.translatable("stashfinder.search.placeholder"));
     }
 
-    // ── Dinamik box yüksekliği ────────────────────────────────────────────
-    private static final int HIST_HEADER_H = 16; // "Son aramalar" başlığı
-
-    private int visibleHistCount() {
-        return Math.min(history.size(), MAX_HIST_SHOW);
-    }
+    // ── Box yüksekliği ────────────────────────────────────────────────────
+    private int visibleHistCount() { return Math.min(history.size(), MAX_HIST_SHOW); }
 
     private int boxH() {
         if (showHistory) {
-            // Geçmiş boşsa sadece input + küçük hint alanı + footer
-            if (history.isEmpty())
-                return INPUT_H + 1 + 32 + FOOTER_H;
+            if (history.isEmpty()) return INPUT_H + 1 + 32 + FOOTER_H;
             return INPUT_H + 1 + HIST_HEADER_H + visibleHistCount() * HIST_ROW_H + FOOTER_H;
         }
-        // Yazarken tam boyut
-        return BOX_H_RESULTS;
+        int rows = Math.min(results.size(), MAX_VISIBLE);
+        if (rows == 0) rows = 1;
+        return INPUT_H + 1 + rows * ROW_H + FOOTER_H;
     }
 
     private int boxX() { return (width  - BOX_W) / 2; }
@@ -92,6 +108,7 @@ public class SearchOverlay extends Screen {
     protected void init() {
         history = new ArrayList<>(ChestStorage.getInstance().getSearchHistory());
         rebuildField();
+        rebuildSortToggle();
         rebuildButtons();
     }
 
@@ -100,7 +117,7 @@ public class SearchOverlay extends Screen {
         int bx = boxX(), by = boxY();
         searchField = new TextFieldWidget(textRenderer,
                 bx + 30, by + (INPUT_H - textRenderer.fontHeight) / 2,
-                BOX_W - 38, textRenderer.fontHeight + 4,
+                BOX_W - 70, textRenderer.fontHeight + 4,
                 null, Text.translatable("stashfinder.search.placeholder"));
         searchField.setMaxLength(64);
         searchField.setPlaceholder(Text.translatable("stashfinder.search.placeholder"));
@@ -113,13 +130,27 @@ public class SearchOverlay extends Screen {
         searchField.setFocused(true);
     }
 
+    private void rebuildSortToggle() {
+        if (sortToggleBtn != null) remove(sortToggleBtn);
+        int bx = boxX(), by = boxY();
+        sortToggleBtn = ButtonWidget.builder(Text.empty(), b -> {
+            showSortMenu = !showSortMenu;
+            rebuildButtons();
+        }).dimensions(bx + BOX_W - 36, by + 4, 30, INPUT_H - 8).build();
+        sortToggleBtn.setAlpha(0f);
+        addDrawableChild(sortToggleBtn);
+    }
+
     // ── Listener ──────────────────────────────────────────────────────────
     private void onSearchChanged(String query) {
         selectedIndex = 0;
+        scrollOffset  = 0;
         showHistory   = query.isBlank();
+        showSortMenu  = false;
 
         if (showHistory) {
             results = new ArrayList<>();
+            scrollOffset = 0;
             rebuildButtons();
             return;
         }
@@ -133,50 +164,72 @@ public class SearchOverlay extends Screen {
         String dim = mc.world.getRegistryKey().getValue().toString();
         results    = ChestStorage.getInstance().searchItems(query, dim,
                 mc.player.getX(), mc.player.getZ());
-        if (results.size() > MAX_RESULTS) results = results.subList(0, MAX_RESULTS);
+        // MAX_RESULTS sınırı kaldırıldı — scroll ile tümünü göster
         rebuildButtons();
     }
 
-    // ── Buton yönetimi ────────────────────────────────────────────────────
+    private void refreshResults() {
+        if (searchField == null || searchField.getText().isBlank()) return;
+        onSearchChanged(searchField.getText());
+    }
+
+    // ── Butonlar ──────────────────────────────────────────────────────────
     private void rebuildButtons() {
         resultButtons.forEach(this::remove);
         historyButtons.forEach(this::remove);
         deleteButtons.forEach(this::remove);
+        sortButtons.forEach(this::remove);
         resultButtons.clear();
         historyButtons.clear();
         deleteButtons.clear();
+        sortButtons.clear();
 
-        int bx  = boxX();
-        int by  = boxY();
+        int bx = boxX(), by = boxY();
+
+        // Sort dropdown butonları
+        if (showSortMenu) {
+            int sx  = bx + BOX_W - 130;
+            int sy0 = by + INPUT_H + 2;
+            for (int i = 0; i < SORT_COUNT; i++) {
+                final int idx = i;
+                ButtonWidget btn = ButtonWidget.builder(Text.empty(), b -> {
+                    ChestStorage.getInstance().setSortMode(SORT_MODES[idx]);
+                    showSortMenu = false;
+                    refreshResults();
+                    rebuildButtons();
+                }).dimensions(sx, sy0 + i * SORT_ROW_H, 128, SORT_ROW_H).build();
+                btn.setAlpha(0f);
+                sortButtons.add(btn);
+                addDrawableChild(btn);
+            }
+            return; // sort menu açıkken diğer butonları ekleme
+        }
 
         if (showHistory) {
             int hy0 = by + INPUT_H + 1 + HIST_HEADER_H;
             for (int i = 0; i < visibleHistCount(); i++) {
                 final int idx = i;
-                // Satır tıklama — geçmiş sorgusunu uygula
                 ButtonWidget row = ButtonWidget.builder(Text.empty(), b -> applyHistory(idx))
-                        .dimensions(bx + 1, hy0 + idx * HIST_ROW_H, BOX_W - 22, HIST_ROW_H)
-                        .build();
+                        .dimensions(bx + 1, hy0 + idx * HIST_ROW_H, BOX_W - 22, HIST_ROW_H).build();
                 row.setAlpha(0f);
                 historyButtons.add(row);
                 addDrawableChild(row);
 
-                // ✕ butonu
                 ButtonWidget del = ButtonWidget.builder(Text.empty(), b -> deleteHistory(idx))
-                        .dimensions(bx + BOX_W - 20, hy0 + idx * HIST_ROW_H, 18, HIST_ROW_H)
-                        .build();
+                        .dimensions(bx + BOX_W - 20, hy0 + idx * HIST_ROW_H, 18, HIST_ROW_H).build();
                 del.setAlpha(0f);
                 deleteButtons.add(del);
                 addDrawableChild(del);
             }
         } else {
-            int ry0 = by + INPUT_H + 1;
-            for (int i = 0; i < results.size(); i++) {
-                final int idx = i;
+            int ry0      = by + INPUT_H + 1;
+            int visible  = Math.min(results.size() - scrollOffset, MAX_VISIBLE);
+            for (int i = 0; i < visible; i++) {
+                final int idx = scrollOffset + i;
                 ButtonWidget btn = ButtonWidget.builder(Text.empty(), b -> {
                     selectedIndex = idx;
                     activateSelected();
-                }).dimensions(bx + 1, ry0 + idx * ROW_H, BOX_W - 2, ROW_H).build();
+                }).dimensions(bx + 1, ry0 + i * ROW_H, BOX_W - 2, ROW_H).build();
                 btn.setAlpha(0f);
                 resultButtons.add(btn);
                 addDrawableChild(btn);
@@ -188,7 +241,6 @@ public class SearchOverlay extends Screen {
         if (idx >= history.size()) return;
         String q = history.get(idx);
         searchField.setText(q);
-        // cursor sona
         searchField.setCursorToEnd(false);
         onSearchChanged(q);
     }
@@ -207,18 +259,19 @@ public class SearchOverlay extends Screen {
 
         int bx = boxX(), by = boxY(), bh = boxH();
 
-        // Dış çerçeve
         ctx.fill(bx - 1, by - 1, bx + BOX_W + 1, by + bh + 1, 0xFF333333);
         ctx.fill(bx, by, bx + BOX_W, by + bh, C_BG);
-        ctx.fill(bx, by,              bx + BOX_W, by + 1,      C_BORDER_ACC);
-        ctx.fill(bx,           by,    bx + 1,       by + bh,   C_BORDER);
-        ctx.fill(bx + BOX_W-1, by,    bx + BOX_W,   by + bh,   C_BORDER);
-        ctx.fill(bx,  by + bh - 1,    bx + BOX_W,   by + bh,   C_BORDER);
+        ctx.fill(bx, by,              bx + BOX_W, by + 1,    C_BORDER_ACC);
+        ctx.fill(bx,           by,    bx + 1,     by + bh,   C_BORDER);
+        ctx.fill(bx + BOX_W-1, by,    bx + BOX_W, by + bh,   C_BORDER);
+        ctx.fill(bx,  by + bh - 1,    bx + BOX_W, by + bh,   C_BORDER);
 
-        renderInputRow(ctx, bx, by);
+        renderInputRow(ctx, bx, by, mouseX, mouseY);
         ctx.fill(bx + 1, by + INPUT_H, bx + BOX_W - 1, by + INPUT_H + 1, C_DIVIDER);
 
-        if (showHistory) {
+        if (showSortMenu) {
+            renderSortMenu(ctx, bx, by, mouseX, mouseY);
+        } else if (showHistory) {
             renderHistory(ctx, bx, by, mouseX, mouseY);
         } else {
             renderResults(ctx, bx, by, mouseX, mouseY);
@@ -229,18 +282,14 @@ public class SearchOverlay extends Screen {
     }
 
     // ── Input satırı ──────────────────────────────────────────────────────
-    private void renderInputRow(DrawContext ctx, int bx, int by) {
+    private void renderInputRow(DrawContext ctx, int bx, int by, int mouseX, int mouseY) {
         ctx.fill(bx + 1, by + 1, bx + BOX_W - 1, by + INPUT_H, C_BG_INPUT);
 
-        IconManager im = IconManager.get();
-        int iconY = by + (INPUT_H - 16) / 2;
-        if (im.hasPng("search")) {
-            im.draw(ctx, "search", bx + 8, iconY);
-        } else {
-            ctx.drawTextWithShadow(textRenderer, Text.literal(im.fallback("search")),
-                    bx + 8, by + (INPUT_H - textRenderer.fontHeight) / 2, C_TEXT_DIM);
-        }
+        // Arama ikonu
+        ctx.drawTextWithShadow(textRenderer, Text.literal("🔍"),
+                bx + 8, by + (INPUT_H - textRenderer.fontHeight) / 2, C_TEXT_DIM);
 
+        // Input metni
         if (searchField != null) {
             String text = searchField.getText();
             int textY   = by + (INPUT_H - textRenderer.fontHeight) / 2;
@@ -259,9 +308,54 @@ public class SearchOverlay extends Screen {
             }
         }
 
+        // Sıralama butonu (sağ üst)
+        SortMode mode   = ChestStorage.getInstance().getSortMode();
+        String sortIcon = SORT_ICONS[List.of(SORT_MODES).indexOf(mode)];
+        boolean sortHov = mouseX >= bx + BOX_W - 36 && mouseX < bx + BOX_W - 6
+                       && mouseY >= by + 4 && mouseY < by + INPUT_H - 4;
+        int sortBg = showSortMenu ? C_BG_SORT_SEL : (sortHov ? 0xFF2a2a2a : C_BG_SORT);
+        ctx.fill(bx + BOX_W - 36, by + 4, bx + BOX_W - 6, by + INPUT_H - 4, sortBg);
+        ctx.fill(bx + BOX_W - 36, by + 4, bx + BOX_W - 6, by + 5, showSortMenu ? C_BORDER_ACC : C_DIVIDER);
+        ctx.drawCenteredTextWithShadow(textRenderer, Text.literal(sortIcon),
+                bx + BOX_W - 21, by + (INPUT_H - textRenderer.fontHeight) / 2,
+                sortHov || showSortMenu ? C_CYAN : C_TEXT_DIM);
+
         boolean hasText = searchField != null && !searchField.getText().isEmpty();
         ctx.fill(bx + 1, by + INPUT_H - 1, bx + BOX_W - 1, by + INPUT_H,
                 hasText ? C_BORDER_ACC : C_DIVIDER);
+    }
+
+    // ── Sort menüsü ───────────────────────────────────────────────────────
+    private void renderSortMenu(DrawContext ctx, int bx, int by, int mouseX, int mouseY) {
+        SortMode current = ChestStorage.getInstance().getSortMode();
+        int sx   = bx + BOX_W - 130;
+        int sw   = 128;
+        int sy0  = by + INPUT_H + 2;
+        int totalH = SORT_COUNT * SORT_ROW_H;
+
+        // Arka plan
+        ctx.fill(sx - 1, sy0 - 1, sx + sw + 1, sy0 + totalH + 1, 0xFF333333);
+        ctx.fill(sx, sy0, sx + sw, sy0 + totalH, 0xFF1a1a1a);
+
+        for (int i = 0; i < SORT_COUNT; i++) {
+            int ry  = sy0 + i * SORT_ROW_H;
+            boolean sel = SORT_MODES[i] == current;
+            boolean hov = mouseX >= sx && mouseX < sx + sw
+                       && mouseY >= ry && mouseY < ry + SORT_ROW_H;
+
+            if (sel) ctx.fill(sx, ry, sx + sw, ry + SORT_ROW_H, C_BG_SORT_SEL);
+            else if (hov) ctx.fill(sx, ry, sx + sw, ry + SORT_ROW_H, 0xFF2a2a2a);
+
+            if (sel) ctx.fill(sx, ry, sx + 2, ry + SORT_ROW_H, C_CYAN);
+
+            ctx.drawTextWithShadow(textRenderer,
+                    Text.literal(SORT_ICONS[i] + " " + Text.translatable(SORT_KEYS[i]).getString()),
+                    sx + 6, ry + (SORT_ROW_H - textRenderer.fontHeight) / 2,
+                    sel ? C_CYAN : (hov ? C_TEXT : C_TEXT_HIST));
+
+            if (i < SORT_COUNT - 1)
+                ctx.fill(sx + 4, ry + SORT_ROW_H - 1, sx + sw - 4, ry + SORT_ROW_H, C_DIVIDER);
+        }
     }
 
     // ── Geçmiş ────────────────────────────────────────────────────────────
@@ -275,17 +369,13 @@ public class SearchOverlay extends Screen {
             return;
         }
 
-        // "Son aramalar" başlık satırı — kendi alanında, listeden ayrı
         int headerY = hy0 + (HIST_HEADER_H - textRenderer.fontHeight) / 2;
         ctx.drawTextWithShadow(textRenderer,
                 Text.translatable("stashfinder.search.history_label"),
                 bx + 10, headerY, C_TEXT_DIM);
-        // başlık altı ince çizgi
         ctx.fill(bx + 1, hy0 + HIST_HEADER_H - 1, bx + BOX_W - 1, hy0 + HIST_HEADER_H, C_DIVIDER);
 
-        // Liste başlığın hemen altından başlar
         int listY = hy0 + HIST_HEADER_H;
-
         for (int i = 0; i < visibleHistCount(); i++) {
             int ry  = listY + i * HIST_ROW_H;
             boolean hov = mouseX >= bx + 1 && mouseX < bx + BOX_W - 20
@@ -295,7 +385,6 @@ public class SearchOverlay extends Screen {
 
             ctx.drawTextWithShadow(textRenderer, Text.literal("⌚"),
                     bx + 8, ry + (HIST_ROW_H - textRenderer.fontHeight) / 2, C_TEXT_DIM);
-
             ctx.drawTextWithShadow(textRenderer, Text.literal(history.get(i)),
                     bx + 24, ry + (HIST_ROW_H - textRenderer.fontHeight) / 2,
                     hov ? C_TEXT : C_TEXT_HIST);
@@ -313,33 +402,26 @@ public class SearchOverlay extends Screen {
 
     // ── Sonuçlar ──────────────────────────────────────────────────────────
     private void renderResults(DrawContext ctx, int bx, int by, int mouseX, int mouseY) {
-        int ry0   = by + INPUT_H + 1;
-        int areaH = MAX_RESULTS * ROW_H;
-        String q  = searchField != null ? searchField.getText() : "";
+        int ry0    = by + INPUT_H + 1;
+        int visible = Math.min(results.size() - scrollOffset, MAX_VISIBLE);
+        int areaH  = Math.max(1, visible) * ROW_H;
 
         if (results.isEmpty()) {
-            ctx.fill(bx + 1, ry0, bx + BOX_W - 1, ry0 + areaH, C_BG);
+            ctx.fill(bx + 1, ry0, bx + BOX_W - 1, ry0 + ROW_H, C_BG);
             ctx.drawCenteredTextWithShadow(textRenderer,
                     Text.translatable("stashfinder.search.empty"),
-                    bx + BOX_W / 2, ry0 + areaH / 2 - 4, C_TEXT_DIM);
+                    bx + BOX_W / 2, ry0 + ROW_H / 2 - 4, C_TEXT_DIM);
             return;
         }
 
-        MinecraftClient mc  = MinecraftClient.getInstance();
-        String activeDim    = mc.world != null ? mc.world.getRegistryKey().getValue().toString() : "";
+        MinecraftClient mc = MinecraftClient.getInstance();
+        String activeDim   = mc.world != null ? mc.world.getRegistryKey().getValue().toString() : "";
 
-        for (int i = 0; i < MAX_RESULTS; i++) {
+        for (int i = 0; i < visible; i++) {
+            int idx  = scrollOffset + i;
             int rowY = ry0 + i * ROW_H;
-
-            if (i >= results.size()) {
-                ctx.fill(bx + 1, rowY, bx + BOX_W - 1, rowY + ROW_H, C_BG);
-                if (i < MAX_RESULTS - 1)
-                    ctx.fill(bx + 1, rowY + ROW_H - 1, bx + BOX_W - 1, rowY + ROW_H, C_DIVIDER);
-                continue;
-            }
-
-            ChestStorage.SearchResult r = results.get(i);
-            boolean sel  = (i == selectedIndex);
+            ChestStorage.SearchResult r = results.get(idx);
+            boolean sel  = (idx == selectedIndex);
             boolean diff = !r.chest.isInDimension(activeDim);
 
             if (sel) {
@@ -363,7 +445,6 @@ public class SearchOverlay extends Screen {
             String name = r.firstItem() != null && r.firstItem().getDisplayName() != null
                     ? r.firstItem().getDisplayName()
                     : Text.translatable("stashfinder.item.unknown").getString();
-
             String chestName = ChestStorage.getInstance().getDisplayName(r.chest);
             String sub       = chestName + "  " + r.chest.getX() + ", "
                              + r.chest.getY() + ", " + r.chest.getZ();
@@ -385,8 +466,19 @@ public class SearchOverlay extends Screen {
             ctx.drawTextWithShadow(textRenderer, Text.literal(distStr),
                     rightX, subY, diff ? C_TEXT_DIM : C_CYAN);
 
-            if (i < MAX_RESULTS - 1)
+            if (i < visible - 1)
                 ctx.fill(bx + 1, rowY + ROW_H - 1, bx + BOX_W - 1, rowY + ROW_H, C_DIVIDER);
+        }
+
+        // Scrollbar
+        if (results.size() > MAX_VISIBLE) {
+            int sbX    = bx + BOX_W - 3;
+            int sbH    = areaH;
+            int sbY    = ry0;
+            int thumbH = Math.max(16, sbH * MAX_VISIBLE / results.size());
+            int thumbY = sbY + (sbH - thumbH) * scrollOffset / Math.max(1, results.size() - MAX_VISIBLE);
+            ctx.fill(sbX, sbY, sbX + 2, sbY + sbH, 0xFF222222);
+            ctx.fill(sbX, thumbY, sbX + 2, thumbY + thumbH, C_CYAN);
         }
     }
 
@@ -405,13 +497,13 @@ public class SearchOverlay extends Screen {
         String cls = Text.translatable("stashfinder.search.hint_close").getString();
 
         if (showHistory && !history.isEmpty()) {
-            hint(ctx, fx,                              ffy, "↑↓",    " " + sel + "  ");
-            hint(ctx, fx + hintW("↑↓ " + sel + "  "), ffy, "Enter", " " + apl + "  ");
-            hint(ctx, fx + hintW("↑↓ " + sel + "  Enter " + apl + "  "), ffy, "Esc", " " + cls);
+            hint(ctx, fx, ffy, "↑↓", " " + sel + "  ");
+            hint(ctx, fx + hw("↑↓ " + sel + "  "), ffy, "Enter", " " + apl + "  ");
+            hint(ctx, fx + hw("↑↓ " + sel + "  Enter " + apl + "  "), ffy, "Esc", " " + cls);
         } else {
-            hint(ctx, fx,                              ffy, "↑↓",    " " + sel + "  ");
-            hint(ctx, fx + hintW("↑↓ " + sel + "  "), ffy, "Enter", " " + nav + "  ");
-            hint(ctx, fx + hintW("↑↓ " + sel + "  Enter " + nav + "  "), ffy, "Esc", " " + cls);
+            hint(ctx, fx, ffy, "↑↓", " " + sel + "  ");
+            hint(ctx, fx + hw("↑↓ " + sel + "  "), ffy, "Enter", " " + nav + "  ");
+            hint(ctx, fx + hw("↑↓ " + sel + "  Enter " + nav + "  "), ffy, "Esc", " " + cls);
         }
     }
 
@@ -423,31 +515,39 @@ public class SearchOverlay extends Screen {
         ctx.drawTextWithShadow(textRenderer, Text.literal(label), x + kw + 2, y, C_TEXT_DIM);
     }
 
-    private int hintW(String combined) { return textRenderer.getWidth(combined); }
+    private int hw(String s) { return textRenderer.getWidth(s); }
 
     // ── Klavye ────────────────────────────────────────────────────────────
     @Override
     public boolean keyPressed(KeyInput input) {
         int key = input.key();
 
-        if (key == GLFW.GLFW_KEY_ESCAPE) { close(); return true; }
-
+        if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (showSortMenu) { showSortMenu = false; rebuildButtons(); return true; }
+            close(); return true;
+        }
         if (key == GLFW.GLFW_KEY_UP) {
-            int max = showHistory ? visibleHistCount() - 1 : results.size() - 1;
-            selectedIndex = Math.max(0, selectedIndex - 1);
+            if (!showHistory && !results.isEmpty()) {
+                selectedIndex = Math.max(0, selectedIndex - 1);
+                if (selectedIndex < scrollOffset) scrollOffset = selectedIndex;
+            } else if (showHistory) {
+                selectedIndex = Math.max(0, selectedIndex - 1);
+            }
             return true;
         }
         if (key == GLFW.GLFW_KEY_DOWN) {
-            int max = showHistory ? visibleHistCount() - 1 : results.size() - 1;
-            selectedIndex = Math.min(max, selectedIndex + 1);
+            if (!showHistory && !results.isEmpty()) {
+                selectedIndex = Math.min(results.size() - 1, selectedIndex + 1);
+                if (selectedIndex >= scrollOffset + MAX_VISIBLE)
+                    scrollOffset = selectedIndex - MAX_VISIBLE + 1;
+            } else if (showHistory) {
+                selectedIndex = Math.min(visibleHistCount() - 1, selectedIndex + 1);
+            }
             return true;
         }
         if (key == GLFW.GLFW_KEY_ENTER || key == GLFW.GLFW_KEY_KP_ENTER) {
-            if (showHistory) {
-                applyHistory(selectedIndex);
-            } else {
-                activateSelected();
-            }
+            if (showHistory) applyHistory(selectedIndex);
+            else activateSelected();
             return true;
         }
         return super.keyPressed(input);
@@ -459,6 +559,17 @@ public class SearchOverlay extends Screen {
         if (!query.isEmpty()) ChestStorage.getInstance().addToHistory(query);
         ChestMemoryHud.setTarget(results.get(selectedIndex).chest);
         close();
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double hScroll, double vScroll) {
+        if (!showHistory && results.size() > MAX_VISIBLE) {
+            int maxOff    = results.size() - MAX_VISIBLE;
+            scrollOffset  = (int) Math.max(0, Math.min(maxOff, scrollOffset - vScroll));
+            rebuildButtons();
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, hScroll, vScroll);
     }
 
     @Override public boolean shouldPause() { return false; }

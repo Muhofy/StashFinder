@@ -16,6 +16,11 @@
   "stashfinder.search.hint_apply":    "Uygula",
   "stashfinder.search.hint_close":    "Kapat",
 
+  "stashfinder.sort.distance":        "En yakın",
+  "stashfinder.sort.date":            "En son eklenen",
+  "stashfinder.sort.count":           "En dolu sandık",
+  "stashfinder.sort.name":            "Alfabetik",
+
   "stashfinder.records.title":               "SANDIKLAR",
   "stashfinder.records.empty_list":          "Henüz sandık açılmadı.",
   "stashfinder.records.select_hint":         "Sandık seçin",

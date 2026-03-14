@@ -16,6 +16,11 @@
   "stashfinder.search.hint_apply":    "Apply",
   "stashfinder.search.hint_close":    "Close",
 
+  "stashfinder.sort.distance":        "Nearest first",
+  "stashfinder.sort.date":            "Recently indexed",
+  "stashfinder.sort.count":           "Most items",
+  "stashfinder.sort.name":            "Alphabetical",
+
   "stashfinder.records.title":               "CHESTS",
   "stashfinder.records.empty_list":          "No chests indexed yet.",
   "stashfinder.records.select_hint":         "Select a chest",
