@@ -95,8 +95,8 @@ public class SearchOverlay extends Screen {
             if (history.isEmpty()) return INPUT_H + 1 + 32 + FOOTER_H;
             return INPUT_H + 1 + HIST_HEADER_H + visibleHistCount() * HIST_ROW_H + FOOTER_H;
         }
-        int rows = Math.min(results.size(), MAX_VISIBLE);
-        if (rows == 0) rows = 1;
+        // Her zaman MAX_VISIBLE satır yüksekliği — results.size()'a bakma
+        int rows = results.isEmpty() ? 1 : MAX_VISIBLE;
         return INPUT_H + 1 + rows * ROW_H + FOOTER_H;
     }
 
