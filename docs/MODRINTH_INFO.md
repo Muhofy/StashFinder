@@ -29,9 +29,11 @@ When you need something, press **F**, type the item name, and ChestMemory tells 
 
 ## 🖼️ Screenshots
 
-![Search Overlay](screenshots/search_overlay.png)
-![Chest Records](screenshots/chest_records.png)
-![HUD Compass](screenshots/hud_compass.png)
+![Search Overlay](https://raw.githubusercontent.com/Muhofy/StashFinder/main/docs/screenshots/search_overlay.png)
+![Chest Records](https://raw.githubusercontent.com/Muhofy/StashFinder/main/docs/screenshots/chest_records.png)
+![HUD Compass](https://raw.githubusercontent.com/Muhofy/StashFinder/main/docs/screenshots/compass_hud.png)
+![Search History](https://raw.githubusercontent.com/Muhofy/StashFinder/main/docs/screenshots/search_history.png)
+![Chest](https://raw.githubusercontent.com/Muhofy/StashFinder/main/docs/screenshots/chest.png)
 
 ---
 
